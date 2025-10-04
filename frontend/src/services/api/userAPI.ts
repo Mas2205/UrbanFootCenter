@@ -1,7 +1,7 @@
 import axios, { AxiosResponse } from 'axios';
+import { API_BASE_URL } from '../../config/constants';
 
 // Utilisation de l'URL de base cohérente avec api.ts
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
 
 // Importation directe de la fonction auth pour éviter les problèmes de résolution de module
 const getAuthHeader = () => {

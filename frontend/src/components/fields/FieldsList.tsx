@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../../config/constants';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
@@ -74,7 +75,7 @@ const adaptFieldFromApi = (apiField: ApiField): Field => {
     // Si l'image_url commence par /uploads, c'est une image locale uploadée
     if (apiField.image_url.startsWith('/uploads')) {
       // Construire l'URL complète avec le serveur backend
-      const baseUrl = process.env.REACT_APP_API_BASE_URL?.replace('/api', '') || 'http://localhost:5001';
+      const baseUrl = API_BASE_URL.replace('/api', '');
       imageUrl = `${baseUrl}${apiField.image_url}`;
       console.log('✅ Generated uploaded image URL:', imageUrl);
     } else if (apiField.image_url.startsWith('/images')) {
@@ -87,7 +88,7 @@ const adaptFieldFromApi = (apiField: ApiField): Field => {
       console.log('✅ Using external image:', imageUrl);
     } else {
       // Fallback: construire l'URL avec le serveur backend
-      const baseUrl = process.env.REACT_APP_API_BASE_URL?.replace('/api', '') || 'http://localhost:5001';
+      const baseUrl = API_BASE_URL.replace('/api', '');
       imageUrl = `${baseUrl}${apiField.image_url}`;
       console.log('✅ Fallback image URL:', imageUrl);
     }

@@ -61,9 +61,9 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 // Import direct du module userAPI (export par défaut)
 import userAPI from '../../../services/api/userAPI';
+import { API_BASE_URL } from '../../../config/constants';
 
 // Configuration de l'API
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
 
 // Types pour le composant
 interface User {
@@ -177,8 +177,8 @@ const AdminUsers: React.FC = () => {
       console.log('API URL de base:', process.env.REACT_APP_API_BASE_URL);
       
       // Construire l'URL correcte en s'assurant qu'elle correspond à la structure de l'API
-      // L'URL du backend est généralement http://localhost:5001/api
-      const baseApiUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
+      // L'URL du backend est généralement configurée via les variables d'environnement
+      const baseApiUrl = API_BASE_URL;
       const apiUrl = `${baseApiUrl}/admin/users`;
       
       console.log('URL API complète:', apiUrl);

@@ -1,7 +1,7 @@
 import axios from 'axios';
+import { API_BASE_URL } from '../../config/constants';
 
 // URL de base de l'API - Utiliser le même port que pour userAPI
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
 
 // Fonction de récupération du header d'authentification
 const getAuthHeader = () => {

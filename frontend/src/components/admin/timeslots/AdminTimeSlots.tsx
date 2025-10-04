@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { API_BASE_URL } from '../../../config/constants';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import { 
@@ -256,11 +257,11 @@ const AdminTimeSlots: React.FC = () => {
     
     try {
       console.log(`Récupération des créneaux horaires avec auth: JWT ${token.substring(0, 15)}...`);
-      console.log('Appel API vers:', `${process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api'}/admin/timeslots`);
+      console.log('Appel API vers:', `${API_BASE_URL}/admin/timeslots`);
       console.log('Token complet pour debug:', token);
       
       // Configuration de l'API comme dans AdminUsers
-      const baseApiUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
+      const baseApiUrl = API_BASE_URL;
       const apiUrl = `${baseApiUrl}/admin/timeslots`;
       
       console.log('URL API complète:', apiUrl);
@@ -402,7 +403,7 @@ const AdminTimeSlots: React.FC = () => {
     try {
       // Transformer les données du formulaire au format API
       const apiTimeSlotData = transformTimeSlotFormToApiFormat(currentTimeSlot);
-      const baseApiUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
+      const baseApiUrl = API_BASE_URL;
       const token = localStorage.getItem('token');
       
       if (dialogMode === 'create') {
@@ -442,7 +443,7 @@ const AdminTimeSlots: React.FC = () => {
   const handleDelete = async () => {
     if (timeSlotToDelete) {
       try {
-        const baseApiUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
+        const baseApiUrl = API_BASE_URL;
         const token = localStorage.getItem('token');
         
         await axios.delete(`${baseApiUrl}/admin/timeslots/${timeSlotToDelete}`, {

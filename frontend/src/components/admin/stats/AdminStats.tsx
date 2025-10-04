@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../../../config/constants';
 import axios from 'axios';
 import { useAuth } from '../../../contexts/AuthContext';
 import {
@@ -125,7 +126,7 @@ const AdminStats: React.FC = () => {
         return;
       }
       
-      const baseApiUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
+      const baseApiUrl = API_BASE_URL;
       
       // Construire les paramètres de requête pour les filtres
       const params = new URLSearchParams();

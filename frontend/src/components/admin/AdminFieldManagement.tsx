@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../../config/constants';
 import { useTranslation } from 'react-i18next';
 import {
   Box,
@@ -84,7 +85,7 @@ function AdminFieldManagement() {
           indoor: fieldData.indoor || false
         });
         if (fieldData.image_url) {
-          setImagePreview(`${process.env.REACT_APP_API_BASE_URL?.replace('/api', '') || 'http://localhost:5001'}${fieldData.image_url}`);
+          setImagePreview(`${API_BASE_URL.replace('/api', '')}${fieldData.image_url}`);
         }
       } else {
         setSnackbarMessage('Erreur lors du chargement des informations du terrain');

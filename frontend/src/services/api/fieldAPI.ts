@@ -1,4 +1,5 @@
 import axios, { AxiosResponse } from 'axios';
+import { API_BASE_URL } from '../../config/constants';
 
 // Importation directe de la fonction auth pour éviter les problèmes de résolution de module
 const getAuthHeader = () => {
@@ -6,7 +7,6 @@ const getAuthHeader = () => {
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
 
 // Types
 export interface Field {

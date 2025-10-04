@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../../../config/constants';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
@@ -187,7 +188,7 @@ const AdminFieldCreate: React.FC = () => {
         console.log('FormData préparé pour envoi');
         
         // Envoyer avec axios directement pour gérer FormData
-        const apiUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
+        const apiUrl = API_BASE_URL;
         const response = await axios.post(`${apiUrl}/fields`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data',

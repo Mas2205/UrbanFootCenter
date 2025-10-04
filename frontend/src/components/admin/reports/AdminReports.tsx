@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../../../config/constants';
 import { useTranslation } from 'react-i18next';
 import {
   Box,
@@ -160,7 +161,7 @@ const AdminReports: React.FC = () => {
     }
 
     try {
-      const baseApiUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
+      const baseApiUrl = API_BASE_URL;
       const headers = { 'Authorization': `Bearer ${token}` };
       
       const formattedStartDate = format(startDate, 'yyyy-MM-dd');

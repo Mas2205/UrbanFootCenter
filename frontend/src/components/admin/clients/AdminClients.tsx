@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../../../config/constants';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import { 
@@ -30,7 +31,6 @@ import {
 } from '@mui/icons-material';
 
 // Configuration de l'API
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
 
 // Interface pour les clients
 interface Client {

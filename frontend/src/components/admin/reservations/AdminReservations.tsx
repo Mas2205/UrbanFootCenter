@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { API_BASE_URL } from '../../../config/constants';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../../contexts';
 import {
@@ -496,7 +497,7 @@ const AdminReservations: React.FC = () => {
   // Fonction pour valider un paiement
   const handleValidatePayment = async (reservationId: string) => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api'}/payments/validate/${reservationId}`, {
+      const response = await fetch(`${API_BASE_URL}/payments/validate/${reservationId}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -519,7 +520,7 @@ const AdminReservations: React.FC = () => {
   // Fonction pour effectuer un paiement en espèces
   const handleCashPayment = async (reservationId: string) => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api'}/payments/cash/${reservationId}`, {
+      const response = await fetch(`${API_BASE_URL}/payments/cash/${reservationId}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
