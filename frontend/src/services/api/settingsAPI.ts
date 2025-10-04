@@ -129,7 +129,7 @@ const settingsAPI = {
         data: {
           stripeEnabled: true,
           stripePublicKey: 'pk_test_XXXXXXXXXXXXXXXXXXXXXXXX',
-          stripeSecretKey: 'sk_test_XXXXXXXXXXXXXXXXXXXXXXXX',
+          stripeSecretKey: 'sk_test_PLACEHOLDER_KEY',
           waveEnabled: true,
           waveApiKey: 'wave_api_key_XXXXXXXXXXXXXXXX',
           orangeMoneyEnabled: true,
