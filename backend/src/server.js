@@ -27,6 +27,9 @@ const {
 // Import de la configuration de base de données
 const { sequelize } = require('./config/database');
 
+// Import des modèles pour créer des données de test
+const { User, Field, TimeSlot } = require('./models');
+
 // Configuration du serveur
 const app = express();
 const server = http.createServer(app);
@@ -155,6 +158,65 @@ io.on('connection', (socket) => {
   });
 });
 
+// Fonction pour créer des données de test
+async function createSampleData() {
+  try {
+    // Vérifier si des terrains existent déjà
+    const fieldCount = await Field.count();
+    if (fieldCount > 0) {
+      console.log(`✅ ${fieldCount} terrain(s) déjà présent(s) dans la base`);
+      return;
+    }
+
+    console.log('🌱 Création de données de test...');
+
+    // Créer des terrains de test
+    const sampleFields = [
+      {
+        name: 'Terrain Central',
+        description: 'Terrain principal avec gazon synthétique de qualité',
+        size: '7v7',
+        surface_type: 'Gazon synthétique',
+        price_per_hour: 15000,
+        location: 'Dakar, Sénégal',
+        equipment_fee: 2000,
+        indoor: false,
+        is_active: true
+      },
+      {
+        name: 'Terrain VIP',
+        description: 'Terrain premium avec éclairage LED et vestiaires',
+        size: '11v11',
+        surface_type: 'Gazon naturel',
+        price_per_hour: 25000,
+        location: 'Almadies, Dakar',
+        equipment_fee: 3000,
+        indoor: false,
+        is_active: true
+      },
+      {
+        name: 'Terrain Indoor',
+        description: 'Terrain couvert climatisé pour toute saison',
+        size: '5v5',
+        surface_type: 'Parquet',
+        price_per_hour: 20000,
+        location: 'Plateau, Dakar',
+        equipment_fee: 1500,
+        indoor: true,
+        is_active: true
+      }
+    ];
+
+    for (const fieldData of sampleFields) {
+      await Field.create(fieldData);
+    }
+
+    console.log('✅ Données de test créées avec succès');
+  } catch (error) {
+    console.error('❌ Erreur lors de la création des données de test:', error);
+  }
+}
+
 // Export des instances pour les tests
 module.exports = { app, server, io };
 
@@ -191,15 +253,16 @@ if (process.env.NODE_ENV !== 'test') {
       console.log('Connexion à la base de données établie avec succès');
       global.DB_MODE = 'normal';
       
-      // Synchronisation du modèle avec la base de données si demandé
-      if (process.env.DB_SYNC === 'true') {
-        console.log('Synchronisation des modèles avec la base de données...');
-        return sequelize.sync({ alter: true }).then(() => {
-          console.log('Synchronisation terminée avec succès');
-        }).catch(err => {
-          console.error('Erreur lors de la synchronisation:', err);
-        });
-      }
+      // Synchronisation du modèle avec la base de données (forcée en production pour créer les tables)
+      console.log('Synchronisation des modèles avec la base de données...');
+      return sequelize.sync({ force: false, alter: true }).then(() => {
+        console.log('✅ Synchronisation terminée avec succès - Tables créées');
+        
+        // Créer des données de test si les tables sont vides
+        return createSampleData();
+      }).catch(err => {
+        console.error('❌ Erreur lors de la synchronisation:', err);
+      });
     })
     .catch(err => {
       // Activer le mode démo quand PostgreSQL n'est pas disponible
