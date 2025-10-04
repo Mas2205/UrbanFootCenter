@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmation de votre réservation - Urban Foot Center</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 2px solid #4CAF50;
+        }
+        .logo {
+            max-width: 150px;
+            height: auto;
+        }
+        h1 {
+            color: #4CAF50;
+            margin-top: 0;
+        }
+        .content {
+            padding: 20px 0;
+        }
+        .reservation-details {
+            background-color: #f2f2f2;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .button {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: #ffffff !important;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .footer {
+            text-align: center;
+            color: #777;
+            font-size: 12px;
+            margin-top: 30px;
+        }
+        .qr-code {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .qr-code img {
+            max-width: 150px;
+        }
+        .cancellation-policy {
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #eee;
+            margin-top: 20px;
+            padding-top: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table th, table td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Urban Foot Center</h1>
+        </div>
+        <div class="content">
+            <h2>Bonjour {{name}},</h2>
+            <p>Votre réservation a été confirmée avec succès. Voici les détails :</p>
+            
+            <div class="reservation-details">
+                <table>
+                    <tr>
+                        <th>Numéro de réservation :</th>
+                        <td>{{reservationId}}</td>
+                    </tr>
+                    <tr>
+                        <th>Terrain :</th>
+                        <td>{{fieldName}}</td>
+                    </tr>
+                    <tr>
+                        <th>Date :</th>
+                        <td>{{date}}</td>
+                    </tr>
+                    <tr>
+                        <th>Heure :</th>
+                        <td>{{startTime}} - {{endTime}}</td>
+                    </tr>
+                    <tr>
+                        <th>Durée :</th>
+                        <td>{{duration}} minutes</td>
+                    </tr>
+                    <tr>
+                        <th>Prix total :</th>
+                        <td>{{totalPrice}} FCFA</td>
+                    </tr>
+                    <tr>
+                        <th>Statut du paiement :</th>
+                        <td>{{paymentStatus}}</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="qr-code">
+                <p>Présentez ce code QR à votre arrivée :</p>
+                <img src="{{qrCodeUrl}}" alt="Code QR de réservation">
+            </div>
+            
+            <div style="text-align: center;">
+                <a href="{{viewReservationUrl}}" class="button">Voir ma réservation</a>
+            </div>
+            
+            <div class="cancellation-policy">
+                <h4>Politique d'annulation :</h4>
+                <ul>
+                    <li>Annulation plus de 24h avant le début : Remboursement à 100%</li>
+                    <li>Annulation entre 12h et 24h avant le début : Remboursement à 50%</li>
+                    <li>Annulation moins de 12h avant le début : Aucun remboursement</li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer">
+            <p>© {{currentYear}} Urban Foot Center. Tous droits réservés.</p>
+            <p>Dakar, Sénégal</p>
+            <p>Besoin d'aide ? Contactez-nous à <a href="mailto:support@urbanfootcenter.sn">support@urbanfootcenter.sn</a></p>
+        </div>
+    </div>
+</body>
+</html>

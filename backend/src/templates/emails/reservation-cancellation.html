@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Annulation de votre réservation - Urban Foot Center</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 2px solid #e74c3c;
+        }
+        .logo {
+            max-width: 150px;
+            height: auto;
+        }
+        h1 {
+            color: #e74c3c;
+            margin-top: 0;
+        }
+        .content {
+            padding: 20px 0;
+        }
+        .reservation-details {
+            background-color: #f2f2f2;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .button {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: #ffffff !important;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .footer {
+            text-align: center;
+            color: #777;
+            font-size: 12px;
+            margin-top: 30px;
+        }
+        .refund-info {
+            background-color: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table th, table td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Urban Foot Center</h1>
+        </div>
+        <div class="content">
+            <h2>Bonjour {{name}},</h2>
+            <p>Nous vous informons que votre réservation a été annulée. Voici les détails :</p>
+            
+            <div class="reservation-details">
+                <table>
+                    <tr>
+                        <th>Numéro de réservation :</th>
+                        <td>{{reservationId}}</td>
+                    </tr>
+                    <tr>
+                        <th>Terrain :</th>
+                        <td>{{fieldName}}</td>
+                    </tr>
+                    <tr>
+                        <th>Date :</th>
+                        <td>{{date}}</td>
+                    </tr>
+                    <tr>
+                        <th>Heure :</th>
+                        <td>{{startTime}} - {{endTime}}</td>
+                    </tr>
+                    <tr>
+                        <th>Raison de l'annulation :</th>
+                        <td>{{cancellationReason}}</td>
+                    </tr>
+                </table>
+            </div>
+
+            {{#if refundAmount}}
+            <div class="refund-info">
+                <h3>Informations sur le remboursement</h3>
+                <p>Conformément à notre politique d'annulation, vous recevrez un remboursement de <strong>{{refundAmount}} FCFA</strong> ({{refundPercentage}}% du montant total).</p>
+                <p>Méthode de remboursement : {{refundMethod}}</p>
+                <p>Le remboursement sera traité dans un délai de 3 à 5 jours ouvrables.</p>
+            </div>
+            {{/if}}
+            
+            <div style="text-align: center;">
+                <a href="{{newReservationUrl}}" class="button">Réserver un nouveau créneau</a>
+            </div>
+            
+            <p>Nous espérons vous revoir très bientôt à Urban Foot Center.</p>
+        </div>
+        <div class="footer">
+            <p>© {{currentYear}} Urban Foot Center. Tous droits réservés.</p>
+            <p>Dakar, Sénégal</p>
+            <p>Besoin d'aide ? Contactez-nous à <a href="mailto:support@urbanfootcenter.sn">support@urbanfootcenter.sn</a></p>
+        </div>
+    </div>
+</body>
+</html>

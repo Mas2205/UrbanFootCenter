@@ -1,0 +1,9 @@
+# Variables d'environnement pour le frontend (à configurer sur Vercel)
+
+REACT_APP_API_BASE_URL=https://votre-backend.railway.app/api
+REACT_APP_API_URL=https://votre-backend.railway.app
+REACT_APP_NODE_ENV=production
+
+# Instructions :
+# 1. Remplacer "votre-backend.railway.app" par l'URL réelle de votre backend Railway
+# 2. Configurer ces variables dans Vercel Dashboard → Settings → Environment Variables

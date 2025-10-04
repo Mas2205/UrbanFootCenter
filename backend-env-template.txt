@@ -1,0 +1,23 @@
+# Variables d'environnement pour le backend (à configurer sur Railway)
+
+NODE_ENV=production
+PORT=5001
+
+# Base de données (auto-générée par Railway PostgreSQL)
+DATABASE_URL=postgresql://postgres:password@host:port/railway
+
+# JWT - GÉNÉRER UNE CLÉ FORTE DE 64 CARACTÈRES
+JWT_SECRET=votre-cle-jwt-securisee-64-caracteres-minimum-ici
+JWT_EXPIRES_IN=24h
+
+# CORS - Mettre l'URL de votre frontend Vercel
+CORS_ORIGIN=https://votre-frontend.vercel.app
+
+# Rate Limiting
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100
+
+# Instructions :
+# 1. Générer une clé JWT forte (64+ caractères)
+# 2. Remplacer "votre-frontend.vercel.app" par l'URL réelle de Vercel
+# 3. DATABASE_URL sera automatiquement générée par Railway PostgreSQL

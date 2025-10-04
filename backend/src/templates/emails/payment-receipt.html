@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reçu de Paiement - Urban Foot Center</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 2px solid #2980b9;
+        }
+        .logo {
+            max-width: 150px;
+            height: auto;
+        }
+        h1 {
+            color: #2980b9;
+            margin-top: 0;
+        }
+        .content {
+            padding: 20px 0;
+        }
+        .receipt {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 15px 0;
+            border: 1px solid #e9ecef;
+        }
+        .receipt-header {
+            border-bottom: 1px solid #e9ecef;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .receipt-footer {
+            border-top: 1px solid #e9ecef;
+            padding-top: 10px;
+            margin-top: 15px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .button {
+            display: inline-block;
+            background-color: #2980b9;
+            color: #ffffff !important;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .footer {
+            text-align: center;
+            color: #777;
+            font-size: 12px;
+            margin-top: 30px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table th, table td {
+            padding: 8px;
+            text-align: left;
+        }
+        .payment-success {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Urban Foot Center</h1>
+        </div>
+        <div class="content">
+            <div class="payment-success">
+                <h3>Paiement Réussi</h3>
+                <p>Merci pour votre paiement.</p>
+            </div>
+            
+            <p>Bonjour {{name}},</p>
+            <p>Nous avons bien reçu votre paiement pour votre réservation. Voici votre reçu :</p>
+            
+            <div class="receipt">
+                <div class="receipt-header">
+                    <h3>Reçu de Paiement</h3>
+                    <p>Date : {{paymentDate}}</p>
+                    <p>N° de transaction : {{transactionId}}</p>
+                </div>
+                
+                <table>
+                    <tr>
+                        <th>Description</th>
+                        <td>Réservation de terrain {{fieldName}}</td>
+                    </tr>
+                    <tr>
+                        <th>Date de réservation</th>
+                        <td>{{reservationDate}}</td>
+                    </tr>
+                    <tr>
+                        <th>Horaire</th>
+                        <td>{{startTime}} - {{endTime}}</td>
+                    </tr>
+                    <tr>
+                        <th>Méthode de paiement</th>
+                        <td>{{paymentMethod}}</td>
+                    </tr>
+                    <tr>
+                        <th>Sous-total</th>
+                        <td>{{subtotal}} FCFA</td>
+                    </tr>
+                    {{#if discount}}
+                    <tr>
+                        <th>Réduction</th>
+                        <td>{{discount}} FCFA</td>
+                    </tr>
+                    {{/if}}
+                    {{#if tax}}
+                    <tr>
+                        <th>TVA ({{taxRate}}%)</th>
+                        <td>{{tax}} FCFA</td>
+                    </tr>
+                    {{/if}}
+                </table>
+                
+                <div class="receipt-footer">
+                    <p>Total payé : {{amount}} FCFA</p>
+                </div>
+            </div>
+            
+            <div style="text-align: center;">
+                <a href="{{receiptUrl}}" class="button">Voir le reçu complet</a>
+            </div>
+            
+            <p>Nous vous remercions pour votre confiance et avons hâte de vous accueillir à Urban Foot Center.</p>
+        </div>
+        <div class="footer">
+            <p>© {{currentYear}} Urban Foot Center. Tous droits réservés.</p>
+            <p>Dakar, Sénégal</p>
+            <p>Besoin d'aide ? Contactez-nous à <a href="mailto:support@urbanfootcenter.sn">support@urbanfootcenter.sn</a></p>
+        </div>
+    </div>
+</body>
+</html>
