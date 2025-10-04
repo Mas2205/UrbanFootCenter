@@ -5,6 +5,13 @@ const path = require('path');
 // Chargement des variables d'environnement
 require('dotenv').config();
 
+// Debug des variables d'environnement
+console.log('🔍 Variables de base de données:');
+console.log('DATABASE_URL:', process.env.DATABASE_URL ? 'DÉFINIE' : 'NON DÉFINIE');
+console.log('DB_HOST:', process.env.DB_HOST || 'NON DÉFINIE');
+console.log('DB_NAME:', process.env.DB_NAME || 'NON DÉFINIE');
+console.log('DB_USER:', process.env.DB_USER || 'NON DÉFINIE');
+
 // Configuration de Sequelize pour PostgreSQL avec support UUID
 const sequelize = process.env.DATABASE_URL 
   ? new Sequelize(process.env.DATABASE_URL, {

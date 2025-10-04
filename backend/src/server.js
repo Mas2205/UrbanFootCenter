@@ -32,6 +32,10 @@ const { User, Field, TimeSlot } = require('./models');
 
 // Configuration du serveur
 const app = express();
+
+// Configuration trust proxy pour Railway
+app.set('trust proxy', true);
+
 const server = http.createServer(app);
 const io = socketIO(server, {
   cors: {
