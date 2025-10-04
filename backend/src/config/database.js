@@ -13,48 +13,33 @@ console.log('DB_NAME:', process.env.DB_NAME || 'NON DÉFINIE');
 console.log('DB_USER:', process.env.DB_USER || 'NON DÉFINIE');
 
 // Configuration de Sequelize pour PostgreSQL avec support UUID
-const sequelize = process.env.DATABASE_URL 
-  ? new Sequelize(process.env.DATABASE_URL, {
-      dialect: 'postgres',
-      logging: process.env.NODE_ENV === 'development' ? console.log : false,
-      define: {
-        timestamps: true,
-        underscored: true
-      },
-      pool: {
-        max: 5,
-        min: 0,
-        acquire: 30000,
-        idle: 10000
-      },
-      dialectOptions: {
-        ssl: process.env.NODE_ENV === 'production' ? {
-          require: true,
-          rejectUnauthorized: false
-        } : false
-      }
-    })
-  : new Sequelize(
-      process.env.DB_NAME || 'urban_foot_center',
-      process.env.DB_USER || 'postgres',
-      process.env.DB_PASSWORD || 'postgres',
-      {
-        host: process.env.DB_HOST || 'localhost',
-        port: process.env.DB_PORT || 5432,
-        dialect: 'postgres',
-        logging: process.env.NODE_ENV === 'development' ? console.log : false,
-        define: {
-          timestamps: true,
-          underscored: true
-        },
-        pool: {
-          max: 5,
-          min: 0,
-          acquire: 30000,
-          idle: 10000
-        }
-      }
-    );
+// Forcer l'utilisation de DATABASE_URL en priorité
+if (!process.env.DATABASE_URL) {
+  console.error('❌ DATABASE_URL non définie, impossible de se connecter à PostgreSQL');
+  process.exit(1);
+}
+
+console.log('✅ Utilisation de DATABASE_URL pour la connexion PostgreSQL');
+const sequelize = new Sequelize(process.env.DATABASE_URL, {
+  dialect: 'postgres',
+  logging: process.env.NODE_ENV === 'development' ? console.log : false,
+  define: {
+    timestamps: true,
+    underscored: true
+  },
+  pool: {
+    max: 5,
+    min: 0,
+    acquire: 30000,
+    idle: 10000
+  },
+  dialectOptions: {
+    ssl: process.env.NODE_ENV === 'production' ? {
+      require: true,
+      rejectUnauthorized: false
+    } : false
+  }
+});
 
 // Configuration pour utiliser les UUIDs comme clés primaires
 const defaultOptions = {
