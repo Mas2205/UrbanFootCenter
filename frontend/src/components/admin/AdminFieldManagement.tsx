@@ -84,7 +84,7 @@ function AdminFieldManagement() {
           indoor: fieldData.indoor || false
         });
         if (fieldData.image_url) {
-          setImagePreview(`${process.env.REACT_APP_API_URL || 'http://localhost:5001'}${fieldData.image_url}`);
+          setImagePreview(`${process.env.REACT_APP_API_BASE_URL?.replace('/api', '') || 'http://localhost:5001'}${fieldData.image_url}`);
         }
       } else {
         setSnackbarMessage('Erreur lors du chargement des informations du terrain');

@@ -236,12 +236,12 @@ const AdminFieldView: React.FC = () => {
                   {field.image_url ? (
                     <Box 
                       component="img"
-                      src={field.image_url.startsWith('http') ? field.image_url : `http://localhost:5001${field.image_url}`}
+                      src={field.image_url.startsWith('http') ? field.image_url : `${process.env.REACT_APP_API_BASE_URL?.replace('/api', '') || 'http://localhost:5001'}${field.image_url}`}
                       alt={field.name}
                       crossOrigin="anonymous"
                       onError={(e) => {
                         console.error('Erreur de chargement image:', field.image_url);
-                        const fullUrl = field.image_url?.startsWith('http') ? field.image_url : `http://localhost:5001${field.image_url}`;
+                        const fullUrl = field.image_url?.startsWith('http') ? field.image_url : `${process.env.REACT_APP_API_BASE_URL?.replace('/api', '') || 'http://localhost:5001'}${field.image_url}`;
                         console.error('URL complète tentée:', fullUrl);
                         // Forcer l'affichage de l'erreur dans l'interface
                         e.currentTarget.style.display = 'block';

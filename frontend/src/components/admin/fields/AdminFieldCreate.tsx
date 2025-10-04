@@ -187,7 +187,8 @@ const AdminFieldCreate: React.FC = () => {
         console.log('FormData préparé pour envoi');
         
         // Envoyer avec axios directement pour gérer FormData
-        const response = await axios.post('http://localhost:5001/api/fields', formData, {
+        const apiUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
+        const response = await axios.post(`${apiUrl}/fields`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
             'Authorization': `Bearer ${localStorage.getItem('token')}`

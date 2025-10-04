@@ -69,25 +69,26 @@ const adaptFieldFromApi = (apiField: ApiField): Field => {
   let imageUrl = ''; // Pas d'image par défaut
   
   console.log('🔍 Processing field:', apiField.name);
-  console.log('📷 Raw image_url from DB:', apiField.image_url);
   
   if (apiField.image_url && apiField.image_url.trim() !== '') {
     // Si l'image_url commence par /uploads, c'est une image locale uploadée
     if (apiField.image_url.startsWith('/uploads')) {
       // Construire l'URL complète avec le serveur backend
-      imageUrl = `http://localhost:5001${apiField.image_url}`;
+      const baseUrl = process.env.REACT_APP_API_BASE_URL?.replace('/api', '') || 'http://localhost:5001';
+      imageUrl = `${baseUrl}${apiField.image_url}`;
       console.log('✅ Generated uploaded image URL:', imageUrl);
     } else if (apiField.image_url.startsWith('/images')) {
       // Si c'est un chemin vers /images, l'utiliser directement
       imageUrl = apiField.image_url;
       console.log('✅ Using static image:', imageUrl);
     } else if (apiField.image_url.startsWith('http')) {
-      // URL externe complète
+      // Si c'est déjà une URL complète, l'utiliser telle quelle
       imageUrl = apiField.image_url;
       console.log('✅ Using external image:', imageUrl);
     } else {
       // Fallback: construire l'URL avec le serveur backend
-      imageUrl = `http://localhost:5001${apiField.image_url}`;
+      const baseUrl = process.env.REACT_APP_API_BASE_URL?.replace('/api', '') || 'http://localhost:5001';
+      imageUrl = `${baseUrl}${apiField.image_url}`;
       console.log('✅ Fallback image URL:', imageUrl);
     }
   } else {
