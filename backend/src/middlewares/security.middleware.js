@@ -13,6 +13,7 @@ exports.generalRateLimit = rateLimit({
   },
   standardHeaders: true, // Retourne les headers `RateLimit-*`
   legacyHeaders: false, // Désactive les headers `X-RateLimit-*`
+  trustProxy: process.env.NODE_ENV === 'production' ? 1 : false, // Configuration sécurisée pour Railway
 });
 
 /**
@@ -28,6 +29,7 @@ exports.authRateLimit = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  trustProxy: process.env.NODE_ENV === 'production' ? 1 : false, // Configuration sécurisée pour Railway
   skipSuccessfulRequests: true, // Ne compte que les échecs
 });
 
@@ -39,11 +41,12 @@ exports.paymentRateLimit = rateLimit({
   max: 3, // 3 tentatives par minute
   message: {
     success: false,
-    message: 'Trop de tentatives de paiement. Veuillez patienter 1 minute.',
+    message: 'Trop de tentatives de paiement. Veuillez patienter une minute.',
     retryAfter: 60
   },
   standardHeaders: true,
   legacyHeaders: false,
+  trustProxy: process.env.NODE_ENV === 'production' ? 1 : false, // Configuration sécurisée pour Railway
 });
 
 /**
@@ -59,6 +62,7 @@ exports.uploadRateLimit = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  trustProxy: process.env.NODE_ENV === 'production' ? 1 : false, // Configuration sécurisée pour Railway
 });
 
 /**

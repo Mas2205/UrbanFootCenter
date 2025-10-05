@@ -121,6 +121,65 @@ router.get('/add-payment-enums', async (req, res) => {
   }
 });
 
+// Route pour corriger le conflit de vue
+router.get('/fix-view-conflict', async (req, res) => {
+  try {
+    console.log('🚀 === CORRECTION CONFLIT VUE FIELDS ===');
+    
+    // 1. Supprimer les vues qui dépendent de la table fields
+    await sequelize.query('DROP VIEW IF EXISTS kpi_reservations_by_field CASCADE;');
+    await sequelize.query('DROP VIEW IF EXISTS kpi_reservations_by_date CASCADE;');
+    console.log('✅ Vues supprimées');
+
+    // 2. Forcer la synchronisation des modèles
+    await sequelize.sync({ alter: true });
+    console.log('✅ Modèles synchronisés');
+
+    // 3. Recréer les vues
+    await sequelize.query(`
+      CREATE OR REPLACE VIEW kpi_reservations_by_date AS
+      SELECT 
+        DATE(reservation_date) as reservation_date,
+        COUNT(*) as total_reservations,
+        SUM(CAST(total_price AS DECIMAL)) as total_revenue
+      FROM reservations 
+      WHERE status IN ('confirmed', 'completed')
+      GROUP BY DATE(reservation_date)
+      ORDER BY reservation_date DESC;
+    `);
+
+    await sequelize.query(`
+      CREATE OR REPLACE VIEW kpi_reservations_by_field AS
+      SELECT 
+        f.id as field_id,
+        f.name as field_name,
+        COUNT(r.id) as total_reservations,
+        SUM(CAST(r.total_price AS DECIMAL)) as total_revenue
+      FROM fields f
+      LEFT JOIN reservations r ON f.id = r.field_id 
+        AND r.status IN ('confirmed', 'completed')
+      GROUP BY f.id, f.name
+      ORDER BY total_reservations DESC;
+    `);
+    console.log('✅ Vues recréées');
+
+    res.status(200).json({
+      success: true,
+      message: '🎉 Conflit de vue résolu avec succès !',
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('❌ Erreur correction vue:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la correction du conflit de vue',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 // Route pour tout faire d'un coup
 router.get('/setup-production', async (req, res) => {
   try {
