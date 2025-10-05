@@ -76,13 +76,18 @@ exports.updateMyField = async (req, res) => {
     // Gérer l'image uploadée
     if (req.file) {
       try {
-        // Upload vers Cloudinary si configuré, sinon stockage local
+        // Upload vers Cloudinary si configuré
         if (process.env.CLOUDINARY_CLOUD_NAME) {
           const cloudinaryResult = await uploadToCloudinary(req.file);
           updateData.image_url = cloudinaryResult.url;
         } else {
-          // Fallback vers stockage local pour développement
-          updateData.image_url = `/uploads/fields/${req.file.filename}`;
+          // Pour Railway sans Cloudinary, ignorer l'upload et garder l'image existante
+          console.log('⚠️ Cloudinary non configuré - Upload d\'image ignoré');
+          return res.status(200).json({
+            success: true,
+            message: 'Terrain mis à jour (image non modifiée - configurez Cloudinary pour les uploads)',
+            data: field
+          });
         }
       } catch (uploadError) {
         console.error('Erreur upload image:', uploadError);

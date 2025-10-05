@@ -115,7 +115,12 @@ app.use('/api/auth/register', authRateLimit);
 app.use('/api/auth/forgot-password', authRateLimit);
 app.use('/api/payments', paymentRateLimit);
 app.use('/uploads', uploadRateLimit);
-app.use('/api', generalRateLimit);
+// Rate limiting seulement en production
+if (process.env.NODE_ENV === 'production') {
+  app.use('/api', generalRateLimit);
+} else {
+  console.log('⚠️ Rate limiting désactivé en développement');
+}
 
 // Configuration globale pour le mode démo
 global.DB_MODE = 'normal'; // Par défaut, mode normal
