@@ -13,7 +13,7 @@ exports.generalRateLimit = rateLimit({
   },
   standardHeaders: true, // Retourne les headers `RateLimit-*`
   legacyHeaders: false, // Désactive les headers `X-RateLimit-*`
-  trustProxy: process.env.NODE_ENV === 'production' ? 1 : false, // Configuration sécurisée pour Railway
+  // trustProxy hérite de app.set('trust proxy') - pas besoin de le redéfinir
 });
 
 /**
@@ -29,7 +29,7 @@ exports.authRateLimit = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  trustProxy: process.env.NODE_ENV === 'production' ? 1 : false, // Configuration sécurisée pour Railway
+  // trustProxy hérite de app.set('trust proxy') - pas besoin de le redéfinir
   skipSuccessfulRequests: true, // Ne compte que les échecs
 });
 
@@ -46,7 +46,7 @@ exports.paymentRateLimit = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  trustProxy: process.env.NODE_ENV === 'production' ? 1 : false, // Configuration sécurisée pour Railway
+  // trustProxy hérite de app.set('trust proxy') - pas besoin de le redéfinir
 });
 
 /**
@@ -62,7 +62,7 @@ exports.uploadRateLimit = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  trustProxy: process.env.NODE_ENV === 'production' ? 1 : false, // Configuration sécurisée pour Railway
+  // trustProxy hérite de app.set('trust proxy') - pas besoin de le redéfinir
 });
 
 /**
