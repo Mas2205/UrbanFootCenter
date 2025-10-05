@@ -63,39 +63,47 @@ const createEmployee = async (req, res) => {
       });
     }
 
-    // Hasher le mot de passe manuellement pour éviter les problèmes de hook
-    console.log('🔐 createEmployee - Hashage du mot de passe...');
+    // SOLUTION DÉFINITIVE : Création directe avec SQL pour éviter les hooks
+    console.log('🔐 createEmployee - Hashage du mot de passe (méthode définitive)...');
     const hashedPassword = await bcrypt.hash(password, 12);
-    console.log('✅ createEmployee - Mot de passe hashé');
+    console.log('✅ createEmployee - Mot de passe hashé avec bcrypt.hash(password, 12)');
 
-    // Créer l'employé avec le field_id de l'admin
-    console.log('💾 createEmployee - Création utilisateur avec données:', {
-      first_name,
-      last_name,
-      email,
-      phone_number: phone_number || null,
-      role: 'employee',
-      field_id: adminUser.field_id,
-      is_active: true,
-      is_verified: true
+    // Utiliser une requête SQL directe pour éviter les problèmes de hooks Sequelize
+    console.log('💾 createEmployee - Création via SQL direct pour garantir la cohérence...');
+    
+    const employeeId = require('uuid').v4();
+    const now = new Date();
+    
+    const [newEmployee] = await User.sequelize.query(`
+      INSERT INTO users (
+        id, first_name, last_name, email, phone_number, password_hash, 
+        role, field_id, is_active, is_verified, created_at, updated_at
+      ) VALUES (
+        :id, :first_name, :last_name, :email, :phone_number, :password_hash,
+        :role, :field_id, :is_active, :is_verified, :created_at, :updated_at
+      ) RETURNING *;
+    `, {
+      replacements: {
+        id: employeeId,
+        first_name,
+        last_name,
+        email,
+        phone_number: phone_number || null,
+        password_hash: hashedPassword,
+        role: 'employee',
+        field_id: adminUser.field_id,
+        is_active: true,
+        is_verified: true,
+        created_at: now,
+        updated_at: now
+      },
+      type: User.sequelize.QueryTypes.SELECT
     });
 
-    const newEmployee = await User.create({
-      first_name,
-      last_name,
-      email,
-      phone_number: phone_number || null,
-      password_hash: hashedPassword, // Utiliser le mot de passe hashé manuellement
-      role: 'employee',
-      field_id: adminUser.field_id,
-      is_active: true,
-      is_verified: true
-    });
-
-    console.log('✅ createEmployee - Employé créé avec ID:', newEmployee.id);
+    console.log('✅ createEmployee - Employé créé via SQL direct avec ID:', employeeId);
 
     // Retourner l'employé créé sans le mot de passe
-    const { password_hash: _, ...employeeData } = newEmployee.toJSON();
+    const { password_hash: _, ...employeeData } = newEmployee[0];
 
     res.status(201).json({
       success: true,

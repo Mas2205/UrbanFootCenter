@@ -82,6 +82,126 @@ router.get('/create-kpi-views', async (req, res) => {
   }
 });
 
+// Route pour tester la connexion d'un employé
+router.post('/test-employee-login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email et mot de passe requis'
+      });
+    }
+
+    console.log(`🧪 Test connexion pour: ${email}`);
+    
+    // Trouver l'utilisateur
+    const user = await sequelize.models.User.findOne({ where: { email } });
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Utilisateur non trouvé'
+      });
+    }
+
+    console.log(`👤 Utilisateur trouvé: ${user.email}`);
+    console.log(`🔑 Hash en base: ${user.password_hash}`);
+    console.log(`📅 Créé le: ${user.created_at}`);
+    console.log(`✅ Vérifié: ${user.is_verified}`);
+
+    // Test de vérification du mot de passe
+    const bcrypt = require('bcryptjs');
+    const isValid = await bcrypt.compare(password, user.password_hash);
+    
+    console.log(`🎯 Test bcrypt.compare('${password}', hash): ${isValid}`);
+
+    res.status(200).json({
+      success: true,
+      message: 'Test de connexion terminé',
+      results: {
+        user_found: true,
+        email: user.email,
+        role: user.role,
+        is_verified: user.is_verified,
+        created_at: user.created_at,
+        password_valid: isValid,
+        hash_preview: user.password_hash.substring(0, 20) + '...'
+      },
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('❌ Erreur test connexion:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors du test',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Route pour réinitialiser le mot de passe d'un employé
+router.post('/reset-employee-password', async (req, res) => {
+  try {
+    const { email, newPassword } = req.body;
+    
+    if (!email || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email et nouveau mot de passe requis'
+      });
+    }
+
+    console.log(`🔄 Réinitialisation mot de passe pour: ${email}`);
+    
+    // Trouver l'utilisateur
+    const user = await sequelize.models.User.findOne({ where: { email } });
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Utilisateur non trouvé'
+      });
+    }
+
+    // Hasher le nouveau mot de passe
+    const bcrypt = require('bcryptjs');
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    
+    // Mettre à jour le mot de passe
+    await user.update({ 
+      password_hash: hashedPassword,
+      is_verified: true // S'assurer que le compte est vérifié
+    });
+
+    console.log(`✅ Mot de passe réinitialisé pour ${email}`);
+
+    res.status(200).json({
+      success: true,
+      message: `Mot de passe réinitialisé pour ${email}`,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        is_verified: user.is_verified
+      },
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('❌ Erreur réinitialisation mot de passe:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la réinitialisation',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 // Route pour ajouter les ENUMs utilisateur manquants
 router.get('/add-user-enums', async (req, res) => {
   try {

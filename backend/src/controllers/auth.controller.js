@@ -122,12 +122,20 @@ exports.login = async (req, res) => {
     }
 
     // Vérifier le mot de passe
-    console.log('Vérification du mot de passe...');
+    console.log('🔐 === VÉRIFICATION MOT DE PASSE DÉTAILLÉE ===');
+    console.log(`📧 Email: ${email}`);
+    console.log(`🔑 Mot de passe fourni: ${password}`);
+    console.log(`🗃️  Hash en base: ${user.password_hash}`);
+    console.log(`📅 Utilisateur créé le: ${user.created_at}`);
+    console.log(`✅ Compte vérifié: ${user.is_verified}`);
+    console.log(`🏢 Rôle: ${user.role}`);
+    
     const isPasswordValid = await user.verifyPassword(password);
-    console.log(`Mot de passe valide: ${isPasswordValid ? 'OUI' : 'NON'}`);
+    console.log(`🎯 Résultat vérification: ${isPasswordValid ? 'SUCCÈS' : 'ÉCHEC'}`);
     
     if (!isPasswordValid) {
-      console.log('Échec: mot de passe incorrect');
+      console.log('❌ ÉCHEC CONNEXION: Mot de passe incorrect');
+      console.log('🔍 Vérifiez que le mot de passe utilisé lors de la création est correct');
       return res.status(401).json({ success: false, message: 'Email ou mot de passe incorrect' });
     }
 
