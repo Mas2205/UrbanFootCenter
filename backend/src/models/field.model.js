@@ -47,6 +47,29 @@ module.exports = (sequelize, DataTypes, defaultOptions) => {
       },
       comment: 'Frais d\'équipement optionnels'
     },
+    // Champs marketplace
+    owner_payout_channel: {
+      type: DataTypes.ENUM('wave', 'orange_money', 'paydunya_push', 'bank_transfer'),
+      allowNull: false,
+      defaultValue: 'wave',
+      comment: 'Canal de versement préféré du propriétaire'
+    },
+    owner_mobile_e164: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      comment: 'Numéro mobile E.164 pour payouts (+221xxxxxxxxx)'
+    },
+    owner_bank_info: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+      comment: 'Informations bancaires pour virements (si applicable)'
+    },
+    commission_rate_bps: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 1000,
+      comment: 'Taux de commission en basis points (1000 = 10%)'
+    },
     indoor: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,

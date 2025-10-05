@@ -77,6 +77,24 @@ db.TimeSlot.belongsTo(db.Field, { foreignKey: 'field_id' });
 
 // Terrain <-> Moyens de paiement
 db.Field.hasMany(db.PaymentMethod, { foreignKey: 'field_id', as: 'paymentMethods' });
+
+// === MODÈLES MARKETPLACE ===
+// Modèles Marketplace
+db.MarketplacePayment = require('./marketplace_payment.model')(sequelize, Sequelize.DataTypes);
+db.Payout = require('./payout.model')(sequelize, Sequelize.DataTypes);
+
+// Associations Marketplace
+// Réservation <-> Paiements Marketplace
+db.Reservation.hasMany(db.MarketplacePayment, { foreignKey: 'reservation_id', as: 'marketplacePayments' });
+db.MarketplacePayment.belongsTo(db.Reservation, { foreignKey: 'reservation_id', as: 'reservation' });
+
+// Paiement Marketplace <-> Payouts
+db.MarketplacePayment.hasMany(db.Payout, { foreignKey: 'marketplace_payment_id', as: 'payouts' });
+db.Payout.belongsTo(db.MarketplacePayment, { foreignKey: 'marketplace_payment_id', as: 'payment' });
+
+// Terrain <-> Payouts
+db.Field.hasMany(db.Payout, { foreignKey: 'field_id', as: 'payouts' });
+db.Payout.belongsTo(db.Field, { foreignKey: 'field_id', as: 'field' });
 db.PaymentMethod.belongsTo(db.Field, { foreignKey: 'field_id', as: 'field' });
 
 module.exports = db;

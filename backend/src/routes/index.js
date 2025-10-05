@@ -27,6 +27,9 @@ router.use('/availability', require('./availability.routes'));
 // Route temporaire pour setup production
 router.use('/admin-setup', require('./admin-setup.routes'));
 
+// Routes marketplace (PayDunya + Wave)
+router.use('/marketplace', require('./marketplace.routes'));
+
 // Routes additionnelles (avec gestion d'erreur si fichiers manquants)
 try {
   router.use('/admin', require('./admin.routes'));
