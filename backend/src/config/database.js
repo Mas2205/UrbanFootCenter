@@ -20,7 +20,17 @@ if (!process.env.DATABASE_URL) {
 }
 
 console.log('✅ Utilisation de DATABASE_URL pour la connexion PostgreSQL');
-const sequelize = new Sequelize(process.env.DATABASE_URL, {
+
+// Correction temporaire pour Railway - remplacer l'adresse interne par l'externe
+let databaseUrl = process.env.DATABASE_URL;
+if (databaseUrl.includes('postgres.railway.internal')) {
+  console.log('🔧 Correction de l\'adresse interne Railway...');
+  // Essayer de remplacer par l'adresse publique Railway
+  databaseUrl = databaseUrl.replace('postgres.railway.internal', process.env.PGHOST || 'postgres.railway.internal');
+  console.log('🔧 Nouvelle URL:', databaseUrl.replace(/\/\/.*:.*@/, '//***:***@'));
+}
+
+const sequelize = new Sequelize(databaseUrl, {
   dialect: 'postgres',
   logging: process.env.NODE_ENV === 'development' ? console.log : false,
   define: {

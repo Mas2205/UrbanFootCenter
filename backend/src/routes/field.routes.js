@@ -1,39 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const multer = require('multer');
-const path = require('path');
 const fieldController = require('../controllers/field.controller');
 const { authMiddleware, adminMiddleware } = require('../middlewares/auth.middleware');
 const { asyncHandler } = require('../middlewares/error.middleware');
-
-// Configuration de multer pour l'upload d'images
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/fields/');
-  },
-  filename: function (req, file, cb) {
-    // Générer un nom unique pour le fichier
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'field-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
-const fileFilter = (req, file, cb) => {
-  // Accepter seulement les images
-  if (file.mimetype.startsWith('image/')) {
-    cb(null, true);
-  } else {
-    cb(new Error('Seuls les fichiers image sont autorisés!'), false);
-  }
-};
-
-const upload = multer({ 
-  storage: storage,
-  fileFilter: fileFilter,
-  limits: {
-    fileSize: 5 * 1024 * 1024 // Limite de 5MB
-  }
-});
+const { upload } = require('../config/storage');
 
 /**
  * @route GET /api/fields

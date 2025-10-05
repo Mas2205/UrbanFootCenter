@@ -2,33 +2,7 @@ const express = require('express');
 const router = express.Router();
 const availabilityController = require('../controllers/availability.controller');
 const { authMiddleware, roleMiddleware } = require('../middlewares/auth.middleware');
-const multer = require('multer');
-const path = require('path');
-
-// Configuration de multer pour l'upload d'images
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/fields/');
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'field-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
-const upload = multer({ 
-  storage: storage,
-  fileFilter: function (req, file, cb) {
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, true);
-    } else {
-      cb(new Error('Seules les images sont autorisées'), false);
-    }
-  },
-  limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB
-  }
-});
+const { upload } = require('../config/storage');
 
 /**
  * @route GET /api/availability/field

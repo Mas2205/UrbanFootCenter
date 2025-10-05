@@ -1,5 +1,6 @@
 const { Field, TimeSlot, User } = require('../models');
 const { Op } = require('sequelize');
+const { uploadToCloudinary } = require('../config/storage');
 
 // Récupérer les informations du terrain assigné à l'admin
 exports.getMyField = async (req, res) => {
@@ -74,7 +75,23 @@ exports.updateMyField = async (req, res) => {
     
     // Gérer l'image uploadée
     if (req.file) {
-      updateData.image_url = `/uploads/fields/${req.file.filename}`;
+      try {
+        // Upload vers Cloudinary si configuré, sinon stockage local
+        if (process.env.CLOUDINARY_CLOUD_NAME) {
+          const cloudinaryResult = await uploadToCloudinary(req.file);
+          updateData.image_url = cloudinaryResult.url;
+        } else {
+          // Fallback vers stockage local pour développement
+          updateData.image_url = `/uploads/fields/${req.file.filename}`;
+        }
+      } catch (uploadError) {
+        console.error('Erreur upload image:', uploadError);
+        return res.status(500).json({
+          success: false,
+          message: 'Erreur lors de l\'upload de l\'image',
+          error: uploadError.message
+        });
+      }
     }
 
     await field.update(updateData);
