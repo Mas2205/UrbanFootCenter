@@ -8,7 +8,7 @@ router.use(authMiddleware);
 
 // Route pour créer une réservation avec paiement intégré
 router.post('/with-payment', 
-  roleMiddleware(['client', 'user', 'admin', 'super_admin']), 
+  roleMiddleware(['client', 'user', 'employee', 'admin', 'super_admin']), 
   reservationWithPaymentController.createReservationWithPayment
 );
 

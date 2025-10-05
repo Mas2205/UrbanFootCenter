@@ -9,7 +9,7 @@ const { upload } = require('../config/storage');
  * @desc Récupérer les informations du terrain assigné à l'admin
  * @access Private (Admin de terrain uniquement)
  */
-router.get('/field', authMiddleware, roleMiddleware(['admin']), availabilityController.getMyField);
+router.get('/field', authMiddleware, roleMiddleware(['admin', 'employee']), availabilityController.getMyField);
 
 /**
  * @route PUT /api/availability/field
@@ -23,7 +23,7 @@ router.put('/field', authMiddleware, roleMiddleware(['admin']), upload.single('i
  * @desc Récupérer les créneaux horaires du terrain assigné à l'admin
  * @access Private (Admin de terrain uniquement)
  */
-router.get('/', authMiddleware, roleMiddleware(['admin']), availabilityController.getFieldAvailability);
+router.get('/', authMiddleware, roleMiddleware(['admin', 'employee']), availabilityController.getFieldAvailability);
 
 /**
  * @route POST /api/availability
