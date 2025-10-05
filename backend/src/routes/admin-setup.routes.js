@@ -82,6 +82,48 @@ router.get('/create-kpi-views', async (req, res) => {
   }
 });
 
+// Route pour ajouter les ENUMs utilisateur manquants
+router.get('/add-user-enums', async (req, res) => {
+  try {
+    console.log('🚀 === AJOUT DES ENUMS UTILISATEUR ===');
+    
+    // Ajouter "employee" à enum_users_role
+    try {
+      await sequelize.query(`ALTER TYPE enum_users_role ADD VALUE IF NOT EXISTS 'employee';`);
+      console.log('✅ Rôle "employee" ajouté');
+    } catch (e) {
+      console.log('ℹ️  Rôle "employee" existe déjà');
+    }
+
+    // Vérifier les valeurs actuelles de l'ENUM
+    const [enumValues] = await sequelize.query(`
+      SELECT enumlabel 
+      FROM pg_enum 
+      WHERE enumtypid = (
+        SELECT oid 
+        FROM pg_type 
+        WHERE typname = 'enum_users_role'
+      );
+    `);
+
+    res.status(200).json({
+      success: true,
+      message: 'ENUMs utilisateur ajoutés avec succès !',
+      current_role_values: enumValues.map(v => v.enumlabel),
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('❌ Erreur ajout ENUMs utilisateur:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de l\'ajout des ENUMs utilisateur',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 // Route pour ajouter les ENUMs manquants
 router.get('/add-payment-enums', async (req, res) => {
   try {
@@ -253,10 +295,15 @@ router.get('/setup-production', async (req, res) => {
 
     // 1. Ajouter les ENUMs
     try {
+      // ENUMs paiement
       await sequelize.query(`ALTER TYPE payment_methods_payment_type ADD VALUE IF NOT EXISTS 'especes';`);
       await sequelize.query(`ALTER TYPE enum_reservations_payment_status ADD VALUE IF NOT EXISTS 'pending_cash';`);
-      results.enums = { success: true, message: 'ENUMs ajoutés avec succès' };
-      console.log('✅ ENUMs ajoutés');
+      
+      // ENUMs utilisateur
+      await sequelize.query(`ALTER TYPE enum_users_role ADD VALUE IF NOT EXISTS 'employee';`);
+      
+      results.enums = { success: true, message: 'ENUMs ajoutés avec succès (paiement + utilisateur)' };
+      console.log('✅ ENUMs ajoutés (paiement + utilisateur)');
     } catch (e) {
       results.enums = { success: true, message: 'ENUMs déjà existants' };
       console.log('ℹ️  ENUMs déjà existants');
