@@ -4,6 +4,17 @@ const { User } = require('../models');
 // Gestion des employés pour les admins de terrain
 const createEmployee = async (req, res) => {
   try {
+    console.log('🔍 createEmployee - Début création employé');
+    console.log('📋 Données reçues:', {
+      body: req.body,
+      adminUser: {
+        id: req.user?.id,
+        email: req.user?.email,
+        role: req.user?.role,
+        field_id: req.user?.field_id
+      }
+    });
+
     const {
       first_name,
       last_name,
@@ -17,6 +28,10 @@ const createEmployee = async (req, res) => {
 
     // Vérifier que l'utilisateur est un admin de terrain avec un field_id
     if (adminUser.role !== 'admin' || !adminUser.field_id) {
+      console.log('❌ createEmployee - Accès refusé:', {
+        role: adminUser.role,
+        field_id: adminUser.field_id
+      });
       return res.status(403).json({
         success: false,
         message: 'Seuls les administrateurs de terrain peuvent créer des employés'
@@ -25,6 +40,12 @@ const createEmployee = async (req, res) => {
 
     // Validation des champs obligatoires
     if (!first_name || !last_name || !email || !password) {
+      console.log('❌ createEmployee - Champs manquants:', {
+        first_name: !!first_name,
+        last_name: !!last_name,
+        email: !!email,
+        password: !!password
+      });
       return res.status(400).json({
         success: false,
         message: 'Les champs prénom, nom, email et mot de passe sont obligatoires'
@@ -32,27 +53,46 @@ const createEmployee = async (req, res) => {
     }
 
     // Vérifier que l'email n'existe pas déjà
+    console.log('🔍 createEmployee - Vérification email existant:', email);
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
+      console.log('❌ createEmployee - Email existe déjà:', email);
       return res.status(400).json({
         success: false,
         message: 'Un utilisateur avec cet email existe déjà'
       });
     }
 
+    // Hasher le mot de passe manuellement pour éviter les problèmes de hook
+    console.log('🔐 createEmployee - Hashage du mot de passe...');
+    const hashedPassword = await bcrypt.hash(password, 12);
+    console.log('✅ createEmployee - Mot de passe hashé');
+
     // Créer l'employé avec le field_id de l'admin
-    // Le mot de passe sera hashé automatiquement par le hook beforeCreate du modèle User
-    const newEmployee = await User.create({
+    console.log('💾 createEmployee - Création utilisateur avec données:', {
       first_name,
       last_name,
       email,
       phone_number: phone_number || null,
-      password_hash: password, // Passer le mot de passe en clair, il sera hashé par le hook
       role: 'employee',
       field_id: adminUser.field_id,
       is_active: true,
       is_verified: true
     });
+
+    const newEmployee = await User.create({
+      first_name,
+      last_name,
+      email,
+      phone_number: phone_number || null,
+      password_hash: hashedPassword, // Utiliser le mot de passe hashé manuellement
+      role: 'employee',
+      field_id: adminUser.field_id,
+      is_active: true,
+      is_verified: true
+    });
+
+    console.log('✅ createEmployee - Employé créé avec ID:', newEmployee.id);
 
     // Retourner l'employé créé sans le mot de passe
     const { password_hash: _, ...employeeData } = newEmployee.toJSON();
@@ -64,10 +104,43 @@ const createEmployee = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Erreur lors de la création de l\'employé:', error);
+    console.log('🚨 === ERREUR CRÉATION EMPLOYÉ ===');
+    console.error('Erreur complète:', error);
+    console.error('Message:', error.message);
+    console.error('Stack:', error.stack);
+    
+    // Erreurs spécifiques de base de données
+    if (error.name === 'SequelizeValidationError') {
+      console.log('❌ Erreur de validation Sequelize:', error.errors);
+      return res.status(400).json({
+        success: false,
+        message: 'Erreur de validation des données',
+        details: error.errors.map(e => e.message)
+      });
+    }
+    
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      console.log('❌ Erreur contrainte unique:', error.fields);
+      return res.status(400).json({
+        success: false,
+        message: 'Un utilisateur avec ces informations existe déjà',
+        field: Object.keys(error.fields)[0]
+      });
+    }
+    
+    if (error.name === 'SequelizeDatabaseError') {
+      console.log('❌ Erreur base de données:', error.original?.message);
+      return res.status(500).json({
+        success: false,
+        message: 'Erreur de base de données',
+        details: process.env.NODE_ENV === 'development' ? error.original?.message : undefined
+      });
+    }
+
     res.status(500).json({
       success: false,
-      message: 'Erreur interne du serveur lors de la création de l\'employé'
+      message: 'Erreur interne du serveur lors de la création de l\'employé',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };
