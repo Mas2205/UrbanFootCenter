@@ -34,6 +34,13 @@ try {
   console.log('⚠️  admin.routes.js non trouvé, ignoré');
 }
 
+// Routes employés pour admins de terrain
+try {
+  router.use('/admin/employees', require('./employee.routes'));
+} catch (e) {
+  console.log('⚠️  employee.routes.js non trouvé, ignoré');
+}
+
 try {
   router.use('/regions', require('./region.routes'));
 } catch (e) {
