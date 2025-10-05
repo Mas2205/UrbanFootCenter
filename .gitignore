@@ -131,3 +131,7 @@ out/
 # Configuration de production
 config/production.json
 config/staging.json
+
+# Clés secrètes générées
+secure-keys-*.env
+*.env.backup
