@@ -120,9 +120,11 @@ exports.createReservationWithPayment = async (req, res) => {
       });
     }
 
-    // Calcul du prix
-    let totalPrice = field.price_per_hour;
+    // Calcul du prix (s'assurer que tout est en nombre)
+    let totalPrice = parseFloat(field.price_per_hour) || 0;
     let discount = 0;
+
+    console.log('💰 Prix de base du terrain:', totalPrice);
 
     // Application du code promo si fourni
     if (promo_code) {
@@ -131,29 +133,36 @@ exports.createReservationWithPayment = async (req, res) => {
           code: promo_code,
           is_active: true,
           valid_from: { [Op.lte]: new Date() },
-          valid_to: { [Op.gte]: new Date() }
+          valid_until: { [Op.gte]: new Date() }
         }
       });
 
       if (promoCodeObj) {
         if (promoCodeObj.discount_type === 'percentage') {
-          discount = (totalPrice * promoCodeObj.discount_value) / 100;
+          discount = (totalPrice * parseFloat(promoCodeObj.discount_value)) / 100;
         } else {
-          discount = promoCodeObj.discount_value;
+          discount = parseFloat(promoCodeObj.discount_value) || 0;
         }
         totalPrice -= discount;
+        console.log('🎫 Réduction appliquée:', discount, '→ Nouveau prix:', totalPrice);
       }
     }
 
     // Ajouter les frais d'équipement si applicable
-    if (field.equipment_fee) {
-      totalPrice += field.equipment_fee;
+    if (equipment_rental && field.equipment_fee) {
+      const equipmentFee = parseFloat(field.equipment_fee) || 0;
+      totalPrice += equipmentFee;
+      console.log('🎽 Frais équipement ajoutés:', equipmentFee, '→ Prix total:', totalPrice);
     }
+
+    // S'assurer que le prix final est un nombre valide avec 2 décimales max
+    totalPrice = Math.round(totalPrice * 100) / 100;
+    console.log('💵 Prix final calculé:', totalPrice);
 
     // Préparer les données de paiement
     const user = await User.findByPk(user_id);
     const paymentPayload = {
-      amount: totalPrice,
+      amount: totalPrice.toFixed(2),
       currency: 'XOF',
       description: `Réservation ${field.name} - ${reservation_date}`,
       customerName: `${user.first_name} ${user.last_name}`,
@@ -228,7 +237,7 @@ exports.createReservationWithPayment = async (req, res) => {
       reservation_date,
       start_time: calculatedStartTime,
       end_time: calculatedEndTime,
-      total_price: totalPrice,
+      total_price: totalPrice.toFixed(2), // Convertir en chaîne avec 2 décimales
       status: reservationStatus,
       payment_status: paymentStatus,
       promo_code_id: promo_code ? (await PromoCode.findOne({ where: { code: promo_code } }))?.id : null
@@ -247,7 +256,7 @@ exports.createReservationWithPayment = async (req, res) => {
     
     const payment = await Payment.create({
       reservation_id: reservation.id,
-      amount: totalPrice,
+      amount: totalPrice.toFixed(2), // Convertir en chaîne avec 2 décimales
       payment_method: payment_method === 'cash' ? 'especes' : payment_method,
       payment_status: paymentStatus,
       transaction_id: paymentResult.transactionId,
