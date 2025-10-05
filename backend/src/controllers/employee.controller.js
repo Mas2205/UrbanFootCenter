@@ -63,47 +63,35 @@ const createEmployee = async (req, res) => {
       });
     }
 
-    // SOLUTION DÉFINITIVE : Création directe avec SQL pour éviter les hooks
+    // SOLUTION DÉFINITIVE : Hashage manuel + création sans hooks
     console.log('🔐 createEmployee - Hashage du mot de passe (méthode définitive)...');
     const hashedPassword = await bcrypt.hash(password, 12);
     console.log('✅ createEmployee - Mot de passe hashé avec bcrypt.hash(password, 12)');
 
-    // Utiliser une requête SQL directe pour éviter les problèmes de hooks Sequelize
-    console.log('💾 createEmployee - Création via SQL direct pour garantir la cohérence...');
+    // Créer l'employé avec Sequelize mais en désactivant les hooks
+    console.log('💾 createEmployee - Création avec Sequelize (hooks désactivés)...');
     
     const employeeId = require('uuid').v4();
-    const now = new Date();
     
-    const [newEmployee] = await User.sequelize.query(`
-      INSERT INTO users (
-        id, first_name, last_name, email, phone_number, password_hash, 
-        role, field_id, is_active, is_verified, created_at, updated_at
-      ) VALUES (
-        :id, :first_name, :last_name, :email, :phone_number, :password_hash,
-        :role, :field_id, :is_active, :is_verified, :created_at, :updated_at
-      ) RETURNING *;
-    `, {
-      replacements: {
-        id: employeeId,
-        first_name,
-        last_name,
-        email,
-        phone_number: phone_number || null,
-        password_hash: hashedPassword,
-        role: 'employee',
-        field_id: adminUser.field_id,
-        is_active: true,
-        is_verified: true,
-        created_at: now,
-        updated_at: now
-      },
-      type: User.sequelize.QueryTypes.SELECT
+    const newEmployee = await User.create({
+      id: employeeId,
+      first_name,
+      last_name,
+      email,
+      phone_number: phone_number || null,
+      password_hash: hashedPassword, // Déjà hashé manuellement
+      role: 'employee',
+      field_id: adminUser.field_id,
+      is_active: true,
+      is_verified: true
+    }, {
+      hooks: false // DÉSACTIVER TOUS LES HOOKS pour éviter le double hashage
     });
 
-    console.log('✅ createEmployee - Employé créé via SQL direct avec ID:', employeeId);
+    console.log('✅ createEmployee - Employé créé avec ID:', newEmployee.id);
 
     // Retourner l'employé créé sans le mot de passe
-    const { password_hash: _, ...employeeData } = newEmployee[0];
+    const { password_hash: _, ...employeeData } = newEmployee.toJSON();
 
     res.status(201).json({
       success: true,
