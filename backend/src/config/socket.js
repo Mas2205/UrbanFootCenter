@@ -33,7 +33,10 @@ exports.initialize = (httpServer) => {
 
       const jwt = require('jsonwebtoken');
       const { User } = require('../models');
-      const JWT_SECRET = process.env.JWT_SECRET || 'urban-foot-center-secret-key';
+      const JWT_SECRET = process.env.JWT_SECRET || (() => {
+        console.error('❌ JWT_SECRET non défini ! Utilisez une clé sécurisée en production.');
+        return 'INSECURE_DEFAULT_KEY_CHANGE_ME';
+      })();
 
       // Vérification du token
       const decoded = jwt.verify(token, JWT_SECRET);

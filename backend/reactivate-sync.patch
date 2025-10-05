@@ -1,0 +1,18 @@
+// Après avoir exécuté /fix-view-conflict, vous pouvez réactiver la sync
+// en remplaçant dans server.js :
+
+// AVANT (actuel - sync désactivée)
+if (process.env.NODE_ENV !== 'production') {
+  // sync seulement en dev
+}
+
+// APRÈS (optionnel - sync réactivée)
+console.log('Synchronisation des modèles avec la base de données...');
+return sequelize.sync({ force: false, alter: true }).then(() => {
+  console.log('✅ Synchronisation terminée avec succès');
+  return createSampleData();
+}).catch(err => {
+  console.error('❌ Erreur lors de la synchronisation:', err);
+});
+
+// MAIS CE N'EST PAS NÉCESSAIRE - La correction est définitive sans ça

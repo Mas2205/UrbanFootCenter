@@ -6,7 +6,10 @@ const bcrypt = require('bcryptjs');
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../services/email.service');
 
 // Configuration JWT
-const JWT_SECRET = process.env.JWT_SECRET || 'urban-foot-center-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET || (() => {
+  console.error('❌ JWT_SECRET non défini ! Utilisez une clé sécurisée en production.');
+  return 'INSECURE_DEFAULT_KEY_CHANGE_ME';
+})();
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
 
 exports.register = async (req, res) => {

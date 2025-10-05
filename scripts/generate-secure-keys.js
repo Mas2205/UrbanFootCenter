@@ -72,10 +72,10 @@ DB_PORT=5432
 DB_NAME=urban_foot_center
 DB_USER=postgres
 CORS_ORIGIN=https://votre-domaine.com
-MAIL_HOST=smtp.gmail.com
+MAIL_HOST=smtp.example.com
 MAIL_PORT=587
-MAIL_USER=votre-email@gmail.com
-MAIL_PASS=votre-mot-de-passe-app
+MAIL_USER=VOTRE_EMAIL@EXAMPLE.COM
+MAIL_PASS=VOTRE_MOT_DE_PASSE_APP
 MAIL_FROM=no-reply@votre-domaine.com
 `;
 

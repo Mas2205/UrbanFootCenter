@@ -2,7 +2,10 @@ const jwt = require('jsonwebtoken');
 const { User } = require('../models');
 
 // Configuration JWT
-const JWT_SECRET = process.env.JWT_SECRET || 'urban-foot-center-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET || (() => {
+  console.error('❌ JWT_SECRET non défini ! Utilisez une clé sécurisée en production.');
+  return 'INSECURE_DEFAULT_KEY_CHANGE_ME';
+})();
 
 /**
  * Middleware de vérification des rôles
