@@ -117,7 +117,7 @@ const paymentAPI = {
   },
 
   /**
-   * Traiter un paiement (simulation pour développement)
+   * Traiter un paiement réel
    */
   processPayment: async (paymentData: { 
     reservationId: string, 
@@ -126,33 +126,26 @@ const paymentAPI = {
     userId: string
   }) => {
     try {
-      // Simuler un appel API pour le développement
-      console.log('Processing payment:', paymentData);
+      console.log('Processing real payment:', paymentData);
       
-      // Simuler un délai de traitement
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Appel à l'API réelle de paiement
+      const response = await axios.post(`${API_BASE_URL}/payments/initiate`, {
+        reservation_id: paymentData.reservationId,
+        payment_method: paymentData.paymentMethod,
+        amount: paymentData.amount
+      }, {
+        headers: {
+          ...getAuthHeader(),
+          'Content-Type': 'application/json'
+        }
+      });
       
-      // Simuler une réponse réussie dans 90% des cas
-      const isSuccess = Math.random() < 0.9;
-      
-      if (isSuccess) {
-        return {
-          data: {
-            paymentId: uuidv4(),
-            transactionId: `TR-${Date.now()}`,
-            status: 'completed',
-            message: 'Paiement traité avec succès'
-          }
-        };
-      } else {
-        throw new Error('Échec de traitement du paiement');
-      }
+      return response;
     } catch (error) {
       console.error('Error processing payment:', error);
       throw error;
     }
   },
-
   /**
    * Obtenir les méthodes de paiement disponibles
    */

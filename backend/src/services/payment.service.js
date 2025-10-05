@@ -471,6 +471,128 @@ class PaymentService {
       throw createError('PaymentError', 'Erreur lors du traitement du remboursement', 500, error.message);
     }
   }
+
+  /**
+   * Traite un paiement en espèces
+   * @param {Object} reservationData - Données de la réservation
+   * @param {Object} user - Utilisateur effectuant le paiement
+   */
+  static async initiateCashPayment(reservationData, user) {
+    try {
+      const { reservation_id, amount, field_name } = reservationData;
+      
+      // Générer un ID unique pour le paiement en espèces
+      const paymentId = require('uuid').v4();
+      
+      // Créer l'entrée de paiement avec statut pending
+      await Payment.create({
+        id: paymentId,
+        reservation_id,
+        user_id: user.id,
+        amount,
+        payment_method: 'especes',
+        payment_status: 'pending',
+        transaction_id: `CASH_${paymentId}`,
+        transaction_details: JSON.stringify({
+          field_name,
+          user_email: user.email,
+          user_name: `${user.first_name} ${user.last_name}`,
+          payment_type: 'cash_on_site'
+        }),
+        created_at: new Date(),
+        updated_at: new Date()
+      });
+
+      // Mettre à jour le statut de la réservation
+      await Reservation.update(
+        { 
+          payment_status: 'pending_cash',
+          status: 'confirmed' // La réservation est confirmée mais en attente de paiement
+        },
+        { where: { id: reservation_id } }
+      );
+
+      return {
+        success: true,
+        payment_id: paymentId,
+        status: 'pending',
+        message: 'Réservation confirmée - Paiement en espèces à effectuer sur place',
+        instructions: [
+          'Présentez-vous au terrain à l\'heure de votre réservation',
+          `Apportez ${amount} FCFA en espèces`,
+          'Montrez cette confirmation à l\'administrateur du terrain',
+          'Le paiement sera confirmé après réception des espèces'
+        ]
+      };
+    } catch (error) {
+      console.error('Erreur lors de l\'initialisation du paiement en espèces:', error);
+      throw createError('PaymentError', 'Erreur lors de l\'initialisation du paiement en espèces', 500, error.message);
+    }
+  }
+
+  /**
+   * Confirme un paiement en espèces (appelé par l'admin du terrain)
+   * @param {string} paymentId - ID du paiement
+   * @param {Object} adminUser - Utilisateur admin confirmant le paiement
+   */
+  static async confirmCashPayment(paymentId, adminUser) {
+    try {
+      // Récupérer le paiement
+      const payment = await Payment.findByPk(paymentId, {
+        include: [
+          {
+            model: Reservation,
+            as: 'reservation',
+            include: [{ model: Field, as: 'field' }]
+          }
+        ]
+      });
+
+      if (!payment) {
+        throw createError('NotFoundError', 'Paiement non trouvé', 404);
+      }
+
+      if (payment.payment_method !== 'especes') {
+        throw createError('ValidationError', 'Ce paiement n\'est pas un paiement en espèces', 400);
+      }
+
+      if (payment.payment_status === 'completed') {
+        throw createError('ValidationError', 'Ce paiement a déjà été confirmé', 400);
+      }
+
+      // Vérifier que l'admin peut confirmer ce paiement (pour son terrain)
+      if (adminUser.role === 'admin' && adminUser.field_id !== payment.reservation.field_id) {
+        throw createError('AuthorizationError', 'Vous ne pouvez confirmer que les paiements de votre terrain', 403);
+      }
+
+      // Mettre à jour le paiement
+      await payment.update({
+        payment_status: 'completed',
+        paid_at: new Date(),
+        transaction_details: JSON.stringify({
+          ...JSON.parse(payment.transaction_details || '{}'),
+          confirmed_by: adminUser.id,
+          confirmed_at: new Date(),
+          confirmation_method: 'admin_manual'
+        })
+      });
+
+      // Mettre à jour la réservation
+      await Reservation.update(
+        { payment_status: 'paid' },
+        { where: { id: payment.reservation_id } }
+      );
+
+      return {
+        success: true,
+        message: 'Paiement en espèces confirmé avec succès',
+        payment_id: paymentId
+      };
+    } catch (error) {
+      console.error('Erreur lors de la confirmation du paiement en espèces:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = PaymentService;

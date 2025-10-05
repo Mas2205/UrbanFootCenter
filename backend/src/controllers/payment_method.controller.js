@@ -112,13 +112,15 @@ exports.createPaymentMethod = async (req, res) => {
       });
     }
 
-    // Validation de l'URL
-    const urlRegex = /^https?:\/\/.+/;
-    if (!urlRegex.test(api_url)) {
-      return res.status(400).json({
-        success: false,
-        message: 'L\'URL de l\'API doit être une URL valide (commencer par http:// ou https://)'
-      });
+    // Validation de l'URL - pas nécessaire pour les paiements en espèces
+    if (payment_type !== 'especes') {
+      const urlRegex = /^https?:\/\/.+/;
+      if (!urlRegex.test(api_url)) {
+        return res.status(400).json({
+          success: false,
+          message: 'L\'URL de l\'API doit être une URL valide (commencer par http:// ou https://)'
+        });
+      }
     }
 
     const paymentMethod = await PaymentMethod.create({
@@ -217,8 +219,8 @@ exports.updatePaymentMethod = async (req, res) => {
       }
     }
 
-    // Validation de l'URL si elle est fournie
-    if (api_url !== undefined) {
+    // Validation de l'URL si elle est fournie - pas nécessaire pour les paiements en espèces
+    if (api_url !== undefined && payment_type !== 'especes') {
       const urlRegex = /^https?:\/\/.+/;
       if (!urlRegex.test(api_url)) {
         return res.status(400).json({

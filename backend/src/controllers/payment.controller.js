@@ -48,12 +48,14 @@ exports.initiatePayment = async (req, res) => {
         paymentResult = await PaymentService.initiateOrangeMoneyPayment(reservationData, req.user);
         break;
       case 'cash':
+      case 'especes':
         // Paiement en espèces - créer directement l'entrée de paiement
         paymentResult = {
           payment_id: require('uuid').v4(),
           status: 'pending',
-          message: 'Paiement en espèces confirmé - À régler sur place',
-          payment_method: 'cash'
+          message: 'Paiement en espèces confirmé - À régler sur place au terrain',
+          payment_method: 'especes',
+          instructions: 'Présentez-vous au terrain avec cette réservation pour effectuer le paiement en espèces'
         };
         
         // Créer l'entrée de paiement dans la base de données
@@ -62,11 +64,26 @@ exports.initiatePayment = async (req, res) => {
           reservation_id,
           user_id,
           amount: reservation.total_price,
-          payment_method: 'cash',
+          payment_method: 'especes',
           payment_status: 'pending',
           transaction_id: paymentResult.payment_id,
           created_at: new Date(),
           updated_at: new Date()
+        });
+
+        // Mettre à jour le statut de la réservation
+        await reservation.update({
+          payment_status: 'pending_cash'
+        });
+
+        // Créer une notification pour l'utilisateur
+        await createNotification({
+          user_id,
+          title: 'Réservation confirmée - Paiement en espèces',
+          message: `Votre réservation pour ${reservation.field.name} le ${reservation.reservation_date} est confirmée. Payez ${reservation.total_price} FCFA en espèces sur place.`,
+          type: 'reservation_confirmed_cash',
+          related_entity_id: reservation_id,
+          related_entity_type: 'reservation'
         });
         break;
       default:
@@ -442,16 +459,42 @@ exports.getPaymentDetails = async (req, res) => {
 exports.validatePayment = async (req, res) => {
   try {
     const { reservationId } = req.params;
+    console.log('🔍 validatePayment - Reservation ID:', reservationId);
+    console.log('🔍 validatePayment - User:', {
+      id: req.user.id,
+      email: req.user.email,
+      role: req.user.role,
+      field_id: req.user.field_id
+    });
     
     // Vérifier que la réservation existe
     const reservation = await Reservation.findByPk(reservationId, {
-      include: [{ model: Payment, as: 'payments' }]
+      include: [
+        { model: Payment, as: 'payments' },
+        { model: User, as: 'user' },
+        { model: Field, as: 'field' }
+      ]
+    });
+    
+    console.log('🔍 validatePayment - Reservation trouvée:', {
+      id: reservation?.id,
+      field_id: reservation?.field_id,
+      payment_status: reservation?.payment_status,
+      payments_count: reservation?.payments?.length || 0
     });
 
     if (!reservation) {
       return res.status(404).json({
         success: false,
         message: 'Réservation non trouvée'
+      });
+    }
+
+    // Vérifier que l'admin peut valider ce paiement (pour son terrain)
+    if (req.user.role === 'admin' && req.user.field_id !== reservation.field_id) {
+      return res.status(403).json({
+        success: false,
+        message: 'Vous ne pouvez valider que les paiements de votre terrain'
       });
     }
 
@@ -462,10 +505,52 @@ exports.validatePayment = async (req, res) => {
 
     // Mettre à jour tous les paiements associés à cette réservation
     if (reservation.payments && reservation.payments.length > 0) {
+      console.log('🔄 validatePayment - Mise à jour des paiements...');
       await Payment.update(
-        { payment_status: 'completed' },
+        { 
+          payment_status: 'completed',
+          payment_date: new Date() // Utiliser payment_date au lieu de paid_at
+        },
         { where: { reservation_id: reservationId } }
       );
+      console.log('✅ validatePayment - Paiements mis à jour');
+    } else {
+      console.log('⚠️  validatePayment - Aucun paiement trouvé pour cette réservation');
+    }
+
+    // Créer une notification pour l'utilisateur
+    try {
+      console.log('🔄 validatePayment - Création de la notification...');
+      await createNotification(reservation.user_id, 'payment_confirmed', {
+        reservationId: reservation.id,
+        fieldName: reservation.field.name,
+        amount: reservation.total_price,
+        date: reservation.reservation_date
+      });
+      console.log('✅ validatePayment - Notification créée');
+    } catch (notifError) {
+      console.error('⚠️  validatePayment - Erreur notification (non-critique):', notifError.message);
+    }
+
+    // Envoyer un reçu par email si c'était un paiement en espèces
+    try {
+      console.log('🔄 validatePayment - Envoi du reçu par email...');
+      const cashPayment = reservation.payments.find(p => p.payment_method === 'especes');
+      if (cashPayment && reservation.user.email) {
+        await sendPaymentReceipt(reservation.user.email, reservation.user.first_name, {
+          reservationId: reservation.id,
+          fieldName: reservation.field.name,
+          date: reservation.reservation_date,
+          amount: cashPayment.amount,
+          paymentMethod: 'Espèces',
+          receiptUrl: `${process.env.FRONTEND_URL}/reservations/${reservation.id}/receipt`
+        });
+        console.log('✅ validatePayment - Reçu envoyé par email');
+      } else {
+        console.log('⚠️  validatePayment - Pas d\'email à envoyer (pas de paiement espèces ou pas d\'email)');
+      }
+    } catch (emailError) {
+      console.error('⚠️  validatePayment - Erreur email (non-critique):', emailError.message);
     }
 
     res.status(200).json({
@@ -473,11 +558,15 @@ exports.validatePayment = async (req, res) => {
       message: 'Paiement validé avec succès'
     });
   } catch (error) {
-    console.error('Erreur lors de la validation du paiement:', error);
+    console.log('🚨 === ERREUR VALIDATION PAIEMENT ===');
+    console.error('Erreur détaillée:', error);
+    console.error('Stack trace:', error.stack);
+    
     res.status(500).json({
       success: false,
       message: 'Erreur lors de la validation du paiement',
-      error: error.message
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Erreur interne du serveur',
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 };

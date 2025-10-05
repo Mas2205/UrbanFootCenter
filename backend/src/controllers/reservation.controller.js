@@ -340,37 +340,57 @@ exports.getUserReservations = async (req, res) => {
     const { status = 'all', page = 1, limit = 10 } = req.query;
     const offset = (parseInt(page) - 1) * parseInt(limit);
     
+    console.log('🚨🚨🚨 REQUÊTE REÇUE 🚨🚨🚨');
+    console.log('🚨 URL complète:', req.url);
+    console.log('🚨 Query params:', req.query);
     console.log(`Récupération des réservations pour l'utilisateur ${user_id} avec filtres: status=${status}, page=${page}, limit=${limit}`);
     
     // Préparer la clause where avec l'ID utilisateur
     const whereClause = { user_id };
     
+    console.log('🔍 Status reçu:', status, 'Type:', typeof status);
+    
     // Ajouter le filtre de statut si nécessaire
     if (status && status !== 'all') {
+      console.log('🔍 Entrée dans le filtrage de statut');
       // Pour les réservations à venir
       if (status === 'upcoming') {
+        console.log('🔍 Filtrage upcoming');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Début de la journée
+        console.log('🔍 Date today:', today);
         whereClause.reservation_date = {
-          [Op.gte]: new Date() // Date >= aujourd'hui
+          [Op.gte]: today // Date >= aujourd'hui (début de journée)
         };
         whereClause.status = {
           [Op.notIn]: ['cancelled'] // Non annulées
         };
+        console.log('🔍 WhereClause après upcoming:', JSON.stringify(whereClause));
       }
       // Pour les réservations passées
       else if (status === 'past') {
+        console.log('🔍 Filtrage past - DÉBUT');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Début de la journée
+        console.log('🔍 Date today pour past:', today);
         whereClause.reservation_date = {
-          [Op.lt]: new Date() // Date < aujourd'hui
+          [Op.lt]: today // Date < aujourd'hui (début de journée)
         };
         whereClause.status = {
           [Op.notIn]: ['cancelled'] // Non annulées
         };
+        console.log('🔍 WhereClause après past:', JSON.stringify(whereClause));
       }
       // Pour les réservations annulées
       else if (status === 'cancelled') {
+        console.log('🔍 Filtrage cancelled');
         whereClause.status = 'cancelled';
       }
       // Pour tout autre statut spécifique
       else {
+        console.log('🚨 Status non reconnu:', status);
+        console.log('🚨 Comparaison status === past:', status === 'past');
+        console.log('🚨 Type de status:', typeof status);
         whereClause.status = status;
       }
     }
@@ -397,13 +417,26 @@ exports.getUserReservations = async (req, res) => {
       offset: offset
     });
 
-    res.status(200).json({
+    console.log(`📊 Résultat final: ${count} réservations trouvées`);
+    reservations.forEach((res, i) => {
+      console.log(`${i+1}. ${res.reservation_date} ${res.start_time} - ${res.status}`);
+    });
+    
+    console.log('🚀 Envoi de la réponse HTTP...');
+    const response = {
       success: true,
       count: count,
+      total: count, // Ajout pour compatibilité frontend
+      perPage: parseInt(limit), // Ajout pour compatibilité frontend
       totalPages: Math.ceil(count / parseInt(limit)),
       currentPage: parseInt(page),
-      data: reservations
-    });
+      data: reservations,
+      debug: { status, whereClause } // Debug temporaire
+    };
+    
+    console.log('🚀 Réponse à envoyer:', JSON.stringify(response, null, 2));
+    res.status(200).json(response);
+    console.log('✅ Réponse HTTP envoyée !');
   } catch (error) {
     console.error('Erreur lors de la récupération des réservations:', error);
     res.status(500).json({

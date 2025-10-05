@@ -18,24 +18,47 @@ module.exports = (sequelize) => {
       }
     },
     payment_type: {
-      type: DataTypes.ENUM('wave', 'orange_money', 'carte_bancaire'),
+      type: DataTypes.ENUM('wave', 'orange_money', 'carte_bancaire', 'especes'),
       allowNull: false,
       validate: {
-        isIn: [['wave', 'orange_money', 'carte_bancaire']]
+        isIn: [['wave', 'orange_money', 'carte_bancaire', 'especes']]
       }
     },
     api_url: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
       validate: {
-        isUrl: {
-          msg: 'L\'URL de l\'API doit être une URL valide'
+        customValidator(value) {
+          // Pour les paiements en espèces, l'URL n'est pas requise
+          if (this.payment_type === 'especes') {
+            return true;
+          }
+          // Pour les autres types, l'URL est requise et doit être valide
+          if (!value) {
+            throw new Error('L\'URL de l\'API est requise pour ce type de paiement');
+          }
+          const urlPattern = /^https?:\/\/.+/;
+          if (!urlPattern.test(value)) {
+            throw new Error('L\'URL de l\'API doit être une URL valide');
+          }
         }
       }
     },
     api_key: {
       type: DataTypes.TEXT,
-      allowNull: false
+      allowNull: true,
+      validate: {
+        customValidator(value) {
+          // Pour les paiements en espèces, la clé API n'est pas requise
+          if (this.payment_type === 'especes') {
+            return true;
+          }
+          // Pour les autres types (sauf Wave), la clé API est requise
+          if (this.payment_type !== 'wave' && !value) {
+            throw new Error('La clé API est requise pour ce type de paiement');
+          }
+        }
+      }
     },
     api_secret: {
       type: DataTypes.TEXT,

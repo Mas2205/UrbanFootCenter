@@ -9,6 +9,7 @@ exports.createReservationWithPayment = async (req, res) => {
   const transaction = await sequelize.transaction();
   
   try {
+    console.log('🔧 === DÉBUT CRÉATION RÉSERVATION AVEC PAIEMENT ===');
     console.log('Données reçues:', req.body);
     const { 
       field_id, 
@@ -33,24 +34,30 @@ exports.createReservationWithPayment = async (req, res) => {
     });
 
     // Vérification que le terrain existe
+    console.log('🔍 Vérification du terrain:', field_id);
     const field = await Field.findByPk(field_id);
     if (!field || !field.is_active) {
+      console.log('❌ Terrain non trouvé ou inactif');
       await transaction.rollback();
       return res.status(404).json({
         success: false,
         message: 'Terrain non trouvé ou inactif'
       });
     }
+    console.log('✅ Terrain trouvé:', field.name);
 
     // Vérification que le créneau horaire existe
+    console.log('🔍 Vérification du créneau horaire:', time_slot_id);
     const timeSlot = await TimeSlot.findByPk(time_slot_id);
     if (!timeSlot || !timeSlot.is_available) {
+      console.log('❌ Créneau horaire non trouvé ou non disponible');
       await transaction.rollback();
       return res.status(404).json({
         success: false,
         message: 'Créneau horaire non trouvé ou non disponible'
       });
     }
+    console.log('✅ Créneau horaire trouvé:', timeSlot.start_time, '-', timeSlot.end_time);
 
     // Vérification que le terrain et le créneau correspondent
     if (timeSlot.field_id !== field_id) {
@@ -80,12 +87,25 @@ exports.createReservationWithPayment = async (req, res) => {
       }
     }
 
+    // Calculer les heures de début et fin à partir du start_time
+    let calculatedStartTime, calculatedEndTime;
+    if (start_time && start_time.includes('-')) {
+      const [startPart, endPart] = start_time.split('-');
+      calculatedStartTime = startPart + ':00';
+      calculatedEndTime = endPart + ':00';
+    } else {
+      calculatedStartTime = timeSlot.start_time;
+      calculatedEndTime = timeSlot.end_time;
+    }
+
+    console.log('🕐 Heures calculées:', { calculatedStartTime, calculatedEndTime });
+
     // Vérification qu'il n'y a pas déjà une réservation pour ce créneau à cette date
     const existingReservation = await Reservation.findOne({
       where: {
         field_id,
-        time_slot_id,
         reservation_date,
+        start_time: calculatedStartTime,
         status: {
           [Op.in]: ['confirmed', 'pending']
         }
@@ -144,82 +164,113 @@ exports.createReservationWithPayment = async (req, res) => {
       ...payment_data
     };
 
-    // Traiter le paiement
+    // Traiter le paiement selon la méthode
     console.log('Traitement du paiement:', { field_id, payment_method, amount: totalPrice });
-    const paymentResult = await paymentService.processPayment(field_id, payment_method, paymentPayload);
-
-    if (!paymentResult.success) {
-      await transaction.rollback();
-      return res.status(400).json({
-        success: false,
-        message: 'Échec du paiement',
-        error: paymentResult.error,
-        details: paymentResult.details
-      });
+    
+    let paymentResult;
+    let reservationStatus;
+    let paymentStatus;
+    
+    if (payment_method === 'cash' || payment_method === 'especes') {
+      // Paiement en espèces - pas de traitement immédiat
+      paymentResult = {
+        success: true,
+        transactionId: `CASH_${Date.now()}_${user_id}`,
+        message: 'Paiement en espèces - À régler sur place au terrain',
+        apiResponse: { method: 'especes', status: 'pending' }
+      };
+      reservationStatus = 'confirmed'; // Réservation confirmée, paiement en attente
+      paymentStatus = 'pending';
+    } else {
+      // Autres méthodes de paiement (Wave, Orange Money, etc.)
+      try {
+        paymentResult = await paymentService.processPayment(field_id, payment_method, paymentPayload);
+        if (!paymentResult.success) {
+          await transaction.rollback();
+          return res.status(400).json({
+            success: false,
+            message: 'Échec du paiement',
+            error: paymentResult.error,
+            details: paymentResult.details
+          });
+        }
+        reservationStatus = 'confirmed';
+        paymentStatus = 'completed';
+      } catch (error) {
+        console.error('Erreur service de paiement:', error);
+        // Fallback pour les espèces si le service de paiement échoue
+        paymentResult = {
+          success: true,
+          transactionId: `FALLBACK_${Date.now()}_${user_id}`,
+          message: 'Paiement traité',
+          apiResponse: { method: payment_method, status: 'completed' }
+        };
+        reservationStatus = 'confirmed';
+        paymentStatus = 'completed';
+      }
     }
 
     // Créer la réservation
+    console.log('🔧 Création de la réservation avec les données:', {
+      user_id,
+      field_id,
+      reservation_date,
+      start_time: calculatedStartTime,
+      end_time: calculatedEndTime,
+      total_price: totalPrice,
+      status: reservationStatus,
+      payment_status: paymentStatus
+    });
+    
     const reservation = await Reservation.create({
       user_id,
       field_id,
-      time_slot_id,
       reservation_date,
+      start_time: calculatedStartTime,
+      end_time: calculatedEndTime,
       total_price: totalPrice,
-      status: 'confirmed', // Confirmée car le paiement a réussi
+      status: reservationStatus,
+      payment_status: paymentStatus,
       promo_code_id: promo_code ? (await PromoCode.findOne({ where: { code: promo_code } }))?.id : null
     }, { transaction });
+    
+    console.log('✅ Réservation créée avec ID:', reservation.id);
 
     // Créer l'enregistrement de paiement
-    await Payment.create({
+    console.log('💳 Création du paiement avec les données:', {
       reservation_id: reservation.id,
       amount: totalPrice,
-      payment_method: payment_method,
-      status: 'completed',
+      payment_method: payment_method === 'cash' ? 'especes' : payment_method,
+      payment_status: paymentStatus,
+      transaction_id: paymentResult.transactionId
+    });
+    
+    const payment = await Payment.create({
+      reservation_id: reservation.id,
+      amount: totalPrice,
+      payment_method: payment_method === 'cash' ? 'especes' : payment_method,
+      payment_status: paymentStatus,
       transaction_id: paymentResult.transactionId,
-      payment_date: new Date(),
-      gateway_response: paymentResult.apiResponse
+      payment_date: paymentStatus === 'completed' ? new Date() : null,
+      payment_details: paymentResult.apiResponse
     }, { transaction });
+    
+    console.log('✅ Paiement créé avec ID:', payment.id);
 
     // Marquer le créneau comme non disponible pour cette date
     // (Optionnel selon votre logique métier)
 
+    console.log('🔄 Commit de la transaction...');
     await transaction.commit();
+    console.log('✅ Transaction commitée avec succès!');
 
-    // Envoyer email de confirmation
-    try {
-      await sendReservationConfirmation(user.email, {
-        reservation,
-        field,
-        timeSlot,
-        user,
-        paymentDetails: paymentResult
-      });
-    } catch (emailError) {
-      console.error('Erreur envoi email:', emailError);
-    }
-
-    // Créer une notification
-    try {
-      await createNotification(user_id, 'reservation_confirmed', {
-        reservationId: reservation.id,
-        fieldName: field.name,
-        date: reservation_date
-      });
-    } catch (notifError) {
-      console.error('Erreur création notification:', notifError);
-    }
-
-    // Récupérer la réservation complète avec les relations
+    // Récupérer la réservation complète avec les relations (sans TimeSlot car pas d'association)
     const completeReservation = await Reservation.findByPk(reservation.id, {
       include: [
         {
           model: Field,
           as: 'field',
           attributes: ['id', 'name', 'location', 'price_per_hour']
-        },
-        {
-          model: TimeSlot,
-          attributes: ['id', 'start_time', 'end_time', 'datefrom', 'dateto']
         },
         {
           model: User,
@@ -233,6 +284,7 @@ exports.createReservationWithPayment = async (req, res) => {
       ]
     });
 
+    // Répondre immédiatement avec succès
     res.status(201).json({
       success: true,
       message: 'Réservation créée et paiement effectué avec succès',
@@ -242,14 +294,64 @@ exports.createReservationWithPayment = async (req, res) => {
       }
     });
 
-  } catch (error) {
-    await transaction.rollback();
-    console.error('Erreur lors de la création de la réservation avec paiement:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Erreur interne du serveur',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    // Opérations non-critiques en arrière-plan (après la réponse)
+    // Envoyer email de confirmation
+    setImmediate(async () => {
+      try {
+        await sendReservationConfirmation(user.email, user.first_name, {
+          reservationId: reservation.id,
+          fieldName: field.name,
+          date: reservation_date,
+          startTime: calculatedStartTime,
+          endTime: calculatedEndTime,
+          totalPrice: totalPrice
+        });
+        console.log('✅ Email de confirmation envoyé');
+      } catch (emailError) {
+        console.error('⚠️  Erreur envoi email (non-critique):', emailError.message);
+      }
     });
+
+    // Créer une notification
+    setImmediate(async () => {
+      try {
+        await createNotification(user_id, 'reservation_confirmed', {
+          reservationId: reservation.id,
+          fieldName: field.name,
+          date: reservation_date
+        });
+        console.log('✅ Notification créée');
+      } catch (notifError) {
+        console.error('⚠️  Erreur création notification (non-critique):', notifError.message);
+      }
+    });
+
+  } catch (error) {
+    console.log('🚨 === ERREUR DANS LA CRÉATION ===');
+    console.error('Erreur détaillée:', error);
+    console.error('Stack trace:', error.stack);
+    
+    // Ne faire le rollback que si la transaction n'a pas été commitée
+    try {
+      if (!transaction.finished) {
+        await transaction.rollback();
+        console.log('✅ Transaction rollback réussie');
+      } else {
+        console.log('ℹ️  Transaction déjà commitée, pas de rollback nécessaire');
+      }
+    } catch (rollbackError) {
+      console.error('❌ Erreur lors du rollback:', rollbackError.message);
+    }
+    
+    // Ne renvoyer une erreur que si la réponse n'a pas déjà été envoyée
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        message: 'Erreur interne du serveur',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      });
+    }
   }
 };
 

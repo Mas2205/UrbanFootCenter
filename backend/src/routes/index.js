@@ -5,6 +5,7 @@ const router = express.Router();
 const authRoutes = require('./auth.routes');
 const fieldRoutes = require('./field.routes');
 const reservationRoutes = require('./reservation.routes');
+const reservationWithPaymentRoutes = require('./reservation_with_payment.routes');
 const paymentRoutes = require('./payment.routes');
 const employeeRoutes = require('./employee.routes');
 const reportsRoutes = require('./reports.routes');
@@ -50,8 +51,11 @@ router.get('/', (req, res) => {
 router.use('/auth', authRoutes);
 router.use('/fields', fieldRoutes);
 
-// Routes de réservation (inclut maintenant les routes avec paiement)
+// Routes de réservation
 router.use('/reservations', reservationRoutes);
+
+// Routes de réservation avec paiement intégré
+router.use('/reservations', reservationWithPaymentRoutes);
 
 router.use('/payments', paymentRoutes);
 router.use('/users', userRoutes);

@@ -51,7 +51,7 @@ import { useAuth } from '../../contexts/AuthContext';
 interface PaymentMethod {
   id: string;
   field_id: string;
-  payment_type: 'wave' | 'orange_money' | 'carte_bancaire';
+  payment_type: 'wave' | 'orange_money' | 'carte_bancaire' | 'especes';
   api_url: string;
   api_key: string;
   api_secret?: string;
@@ -69,7 +69,7 @@ interface PaymentMethod {
 
 interface PaymentMethodForm {
   field_id: string;
-  payment_type: 'wave' | 'orange_money' | 'carte_bancaire' | '';
+  payment_type: 'wave' | 'orange_money' | 'carte_bancaire' | 'especes' | '';
   api_url: string;
   api_key: string;
   api_secret: string;
@@ -221,11 +221,11 @@ function AdminPaymentMethods() {
       const submitData = {
         field_id: formData.field_id || undefined,
         payment_type: formData.payment_type,
-        api_url: formData.api_url,
-        // Pour Wave, utiliser des valeurs par défaut pour les champs non requis
-        api_key: formData.payment_type === 'wave' ? 'wave_redirect' : formData.api_key,
-        api_secret: formData.payment_type === 'wave' ? undefined : (formData.api_secret || undefined),
-        merchant_id: formData.payment_type === 'wave' ? undefined : (formData.merchant_id || undefined),
+        api_url: formData.payment_type === 'especes' ? 'cash_payment' : formData.api_url,
+        api_key: formData.payment_type === 'wave' ? 'wave_redirect' : 
+                 formData.payment_type === 'especes' ? 'cash_payment' : formData.api_key,
+        api_secret: (formData.payment_type === 'wave' || formData.payment_type === 'especes') ? undefined : (formData.api_secret || undefined),
+        merchant_id: (formData.payment_type === 'wave' || formData.payment_type === 'especes') ? undefined : (formData.merchant_id || undefined),
         is_active: formData.is_active,
         ignore_validation: formData.ignore_validation,
         configuration: configurationObj
@@ -297,6 +297,7 @@ function AdminPaymentMethods() {
       case 'wave': return 'Wave';
       case 'orange_money': return 'Orange Money';
       case 'carte_bancaire': return 'Carte Bancaire';
+      case 'especes': return 'Espèces';
       default: return type;
     }
   };
@@ -306,6 +307,7 @@ function AdminPaymentMethods() {
       case 'wave': return '#FF6B35';
       case 'orange_money': return '#FF8C00';
       case 'carte_bancaire': return '#1976D2';
+      case 'especes': return '#4CAF50';
       default: return '#757575';
     }
   };
@@ -480,34 +482,37 @@ function AdminPaymentMethods() {
                   <MenuItem value="wave">Wave</MenuItem>
                   <MenuItem value="orange_money">Orange Money</MenuItem>
                   <MenuItem value="carte_bancaire">Carte Bancaire</MenuItem>
+                  <MenuItem value="especes">Espèces</MenuItem>
                 </Select>
               </FormControl>
 
-              {/* URL API - Adapté selon le type de paiement */}
-              <TextField
-                fullWidth
-                label={formData.payment_type === 'wave' ? 'URL de redirection Wave' : "URL de l'API"}
-                name="api_url"
-                value={formData.api_url}
-                onChange={handleInputChange}
-                required
-                placeholder={
-                  formData.payment_type === 'wave' 
-                    ? 'https://checkout.wave.com/checkout/...' 
-                    : 'https://api.example.com/payment'
-                }
-                helperText={
-                  formData.payment_type === 'wave'
-                    ? 'URL de redirection vers Wave pour effectuer le paiement'
-                    : 'URL de l\'API de paiement'
-                }
-                InputProps={{
-                  startAdornment: <Api sx={{ mr: 1, color: 'action.active' }} />
-                }}
-              />
+              {/* URL API - Masqué pour les paiements en espèces */}
+              {formData.payment_type !== 'especes' && (
+                <TextField
+                  fullWidth
+                  label={formData.payment_type === 'wave' ? 'URL de redirection Wave' : "URL de l'API"}
+                  name="api_url"
+                  value={formData.api_url}
+                  onChange={handleInputChange}
+                  required
+                  placeholder={
+                    formData.payment_type === 'wave' 
+                      ? 'https://checkout.wave.com/checkout/...' 
+                      : 'https://api.example.com/payment'
+                  }
+                  helperText={
+                    formData.payment_type === 'wave'
+                      ? 'URL de redirection vers Wave pour effectuer le paiement'
+                      : 'URL de l\'API de paiement'
+                  }
+                  InputProps={{
+                    startAdornment: <Api sx={{ mr: 1, color: 'action.active' }} />
+                  }}
+                />
+              )}
 
-              {/* Clé API - Masqué pour Wave */}
-              {formData.payment_type !== 'wave' && (
+              {/* Clé API - Masqué pour Wave et Espèces */}
+              {formData.payment_type !== 'wave' && formData.payment_type !== 'especes' && (
                 <TextField
                   fullWidth
                   label="Clé API"
@@ -522,8 +527,8 @@ function AdminPaymentMethods() {
                 />
               )}
 
-              {/* Secret API - Masqué pour Wave */}
-              {formData.payment_type !== 'wave' && (
+              {/* Secret API - Masqué pour Wave et Espèces */}
+              {formData.payment_type !== 'wave' && formData.payment_type !== 'especes' && (
                 <TextField
                   fullWidth
                   label="Secret API (optionnel)"
@@ -537,8 +542,8 @@ function AdminPaymentMethods() {
                 />
               )}
 
-              {/* Merchant ID - Optionnel pour Wave, requis pour autres */}
-              {formData.payment_type !== 'wave' && (
+              {/* Merchant ID - Masqué pour Wave et Espèces */}
+              {formData.payment_type !== 'wave' && formData.payment_type !== 'especes' && (
                 <TextField
                   fullWidth
                   label="Merchant ID (optionnel)"
@@ -561,11 +566,15 @@ function AdminPaymentMethods() {
                 placeholder={
                   formData.payment_type === 'wave'
                     ? '{"currency": "XOF", "callback_url": "https://votre-site.com/callback"}'
+                    : formData.payment_type === 'especes'
+                    ? '{"currency": "XOF", "description": "Paiement en espèces au terrain"}'
                     : '{"timeout": 30, "currency": "XOF"}'
                 }
                 helperText={
                   formData.payment_type === 'wave'
                     ? 'Configuration Wave : currency (devise) et callback_url (URL de retour après paiement)'
+                    : formData.payment_type === 'especes'
+                    ? 'Configuration pour les paiements en espèces : currency (devise) et description'
                     : 'Configuration supplémentaire au format JSON'
                 }
               />

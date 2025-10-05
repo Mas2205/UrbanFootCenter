@@ -6,14 +6,41 @@ const { uploadToCloudinary } = require('../config/storage');
 exports.getMyField = async (req, res) => {
   try {
     const userId = req.user.id;
+    console.log('🔍 getMyField - User ID:', userId);
+    
     const user = await User.findByPk(userId);
+    console.log('🔍 getMyField - User trouvé:', {
+      id: user?.id,
+      email: user?.email,
+      role: user?.role,
+      field_id: user?.field_id
+    });
 
-    if (!user || user.role !== 'admin' || !user.field_id) {
+    if (!user) {
+      console.log('❌ getMyField - Utilisateur non trouvé');
       return res.status(403).json({
         success: false,
-        message: 'Accès refusé. Vous devez être administrateur d\'un terrain.'
+        message: 'Utilisateur non trouvé.'
       });
     }
+
+    if (user.role !== 'admin') {
+      console.log('❌ getMyField - Rôle incorrect:', user.role);
+      return res.status(403).json({
+        success: false,
+        message: `Accès refusé. Rôle requis: admin, rôle actuel: ${user.role}`
+      });
+    }
+
+    if (!user.field_id) {
+      console.log('❌ getMyField - Aucun terrain assigné');
+      return res.status(403).json({
+        success: false,
+        message: 'Accès refusé. Aucun terrain assigné à cet administrateur.'
+      });
+    }
+
+    console.log('✅ getMyField - Accès autorisé pour terrain:', user.field_id);
 
     const field = await Field.findByPk(user.field_id);
 
@@ -42,9 +69,22 @@ exports.getMyField = async (req, res) => {
 exports.updateMyField = async (req, res) => {
   try {
     const userId = req.user.id;
+    console.log('🔍 updateMyField - User ID:', userId);
+    
     const user = await User.findByPk(userId);
+    console.log('🔍 updateMyField - User trouvé:', {
+      id: user?.id,
+      email: user?.email,
+      role: user?.role,
+      field_id: user?.field_id
+    });
 
     if (!user || user.role !== 'admin' || !user.field_id) {
+      console.log('❌ updateMyField - Accès refusé:', {
+        userExists: !!user,
+        role: user?.role,
+        field_id: user?.field_id
+      });
       return res.status(403).json({
         success: false,
         message: 'Accès refusé. Vous devez être administrateur d\'un terrain.'
