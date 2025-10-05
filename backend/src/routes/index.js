@@ -1,20 +1,22 @@
 const express = require('express');
 const router = express.Router();
 
-// Importer toutes les routes
-const authRoutes = require('./auth.routes');
-const fieldRoutes = require('./field.routes');
-const reservationRoutes = require('./reservation.routes');
-const reservationWithPaymentRoutes = require('./reservation_with_payment.routes');
-const paymentRoutes = require('./payment.routes');
-const employeeRoutes = require('./employee.routes');
-const reportsRoutes = require('./reports.routes');
+// Routes principales
+router.use('/auth', require('./auth.routes'));
+router.use('/users', require('./user.routes'));
+router.use('/fields', require('./field.routes'));
+router.use('/reservations', require('./reservation.routes'));
+router.use('/reservations', require('./reservation_with_payment.routes'));
+router.use('/payments', require('./payment.routes'));
+router.use('/stats', require('./stats.routes'));
+router.use('/availability', require('./availability.routes'));
+
+// Route temporaire pour setup production
+router.use('/admin-setup', require('./admin-setup.routes'));
 const statsRoutes = require('./stats.routes');
 const adminRoutes = require('./admin.routes');
 const availabilityRoutes = require('./availability.routes');
 const regionRoutes = require('./region.routes');
-
-// Routes manquantes avec structure minimale
 const userRoutes = require('./user.routes');
 const teamRoutes = express.Router();
 const promoRoutes = express.Router();
