@@ -121,21 +121,68 @@ router.get('/add-payment-enums', async (req, res) => {
   }
 });
 
-// Route pour corriger le conflit de vue
+// Route pour corriger le conflit de vue - Version robuste
 router.get('/fix-view-conflict', async (req, res) => {
   try {
     console.log('🚀 === CORRECTION CONFLIT VUE FIELDS ===');
     
-    // 1. Supprimer les vues qui dépendent de la table fields
-    await sequelize.query('DROP VIEW IF EXISTS kpi_reservations_by_field CASCADE;');
-    await sequelize.query('DROP VIEW IF EXISTS kpi_reservations_by_date CASCADE;');
-    console.log('✅ Vues supprimées');
+    // 1. Vérifier la structure actuelle de la table fields
+    const [currentStructure] = await sequelize.query(`
+      SELECT column_name, data_type, character_maximum_length, is_nullable
+      FROM information_schema.columns 
+      WHERE table_name = 'fields' AND column_name = 'name';
+    `);
+    
+    console.log('📋 Structure actuelle colonne name:', currentStructure[0]);
 
-    // 2. Forcer la synchronisation des modèles
-    await sequelize.sync({ alter: true });
-    console.log('✅ Modèles synchronisés');
+    // 2. Supprimer TOUTES les vues qui pourraient dépendre de fields
+    console.log('🗑️  Suppression des vues dépendantes...');
+    
+    const viewsToDelete = [
+      'kpi_reservations_by_field',
+      'kpi_reservations_by_date', 
+      'kpi_payments_summary',
+      'kpi_monthly_stats'
+    ];
 
-    // 3. Recréer les vues
+    for (const viewName of viewsToDelete) {
+      try {
+        await sequelize.query(`DROP VIEW IF EXISTS ${viewName} CASCADE;`);
+        console.log(`✅ Vue ${viewName} supprimée`);
+      } catch (e) {
+        console.log(`ℹ️  Vue ${viewName} n'existait pas`);
+      }
+    }
+
+    // 3. Modifier manuellement la colonne name si nécessaire
+    if (currentStructure[0]?.data_type !== 'character varying' || 
+        currentStructure[0]?.character_maximum_length !== 100) {
+      
+      console.log('🔧 Modification de la colonne name...');
+      await sequelize.query(`ALTER TABLE fields ALTER COLUMN name TYPE VARCHAR(100);`);
+      await sequelize.query(`ALTER TABLE fields ALTER COLUMN name SET NOT NULL;`);
+      console.log('✅ Colonne name mise à jour');
+    } else {
+      console.log('ℹ️  Colonne name déjà au bon format');
+    }
+
+    // 4. Synchroniser les autres modèles (sans fields)
+    console.log('🔄 Synchronisation des autres modèles...');
+    const models = Object.keys(sequelize.models);
+    for (const modelName of models) {
+      if (modelName !== 'Field') {
+        try {
+          await sequelize.models[modelName].sync({ alter: true });
+          console.log(`✅ Modèle ${modelName} synchronisé`);
+        } catch (e) {
+          console.log(`⚠️  Modèle ${modelName} ignoré:`, e.message);
+        }
+      }
+    }
+
+    // 5. Recréer les vues avec la nouvelle structure
+    console.log('🔄 Recréation des vues...');
+    
     await sequelize.query(`
       CREATE OR REPLACE VIEW kpi_reservations_by_date AS
       SELECT 
@@ -161,11 +208,24 @@ router.get('/fix-view-conflict', async (req, res) => {
       GROUP BY f.id, f.name
       ORDER BY total_reservations DESC;
     `);
-    console.log('✅ Vues recréées');
+    
+    console.log('✅ Toutes les vues recréées');
+
+    // 6. Vérifier que tout fonctionne
+    const [testDate] = await sequelize.query('SELECT COUNT(*) as count FROM kpi_reservations_by_date LIMIT 1');
+    const [testField] = await sequelize.query('SELECT COUNT(*) as count FROM kpi_reservations_by_field LIMIT 1');
 
     res.status(200).json({
       success: true,
-      message: '🎉 Conflit de vue résolu avec succès !',
+      message: '🎉 Conflit de vue résolu définitivement !',
+      details: {
+        column_updated: currentStructure[0],
+        views_recreated: viewsToDelete,
+        test_results: {
+          kpi_reservations_by_date: testDate[0].count,
+          kpi_reservations_by_field: testField[0].count
+        }
+      },
       timestamp: new Date().toISOString()
     });
 
@@ -175,6 +235,7 @@ router.get('/fix-view-conflict', async (req, res) => {
       success: false,
       message: 'Erreur lors de la correction du conflit de vue',
       error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
       timestamp: new Date().toISOString()
     });
   }

@@ -239,8 +239,16 @@ if (process.env.NODE_ENV !== 'test') {
     const portNumber = parseInt(port, 10);
     
     server.listen(portNumber, '0.0.0.0')
-      .on('listening', () => {
+      .on('listening', async () => {
         console.log(`Serveur en cours d'exécution sur le port ${portNumber} (accessible depuis le réseau)`);
+        
+        // Setup automatique en production
+        try {
+          const setupProduction = require('./config/setup-production');
+          await setupProduction();
+        } catch (error) {
+          console.log('⚠️  Setup production ignoré:', error.message);
+        }
       })
       .on('error', (err) => {
         if (err.code === 'EADDRINUSE') {
@@ -262,16 +270,26 @@ if (process.env.NODE_ENV !== 'test') {
       console.log('Connexion à la base de données établie avec succès');
       global.DB_MODE = 'normal';
       
-      // Synchronisation du modèle avec la base de données (forcée en production pour créer les tables)
-      console.log('Synchronisation des modèles avec la base de données...');
-      return sequelize.sync({ force: false, alter: true }).then(() => {
-        console.log('✅ Synchronisation terminée avec succès - Tables créées');
+      // Synchronisation conditionnelle pour éviter les conflits de vue en production
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('Synchronisation des modèles avec la base de données (développement)...');
+        return sequelize.sync({ force: false, alter: true }).then(() => {
+          console.log('✅ Synchronisation terminée avec succès - Tables créées');
+          
+          // Créer des données de test si les tables sont vides
+          return createSampleData();
+        }).catch(err => {
+          console.error('❌ Erreur lors de la synchronisation:', err);
+        });
+      } else {
+        console.log('⚠️  Synchronisation désactivée en production pour éviter les conflits de vue');
+        console.log('ℹ️  Utilisez /api/admin-setup/fix-view-conflict pour corriger manuellement');
         
-        // Créer des données de test si les tables sont vides
-        return createSampleData();
-      }).catch(err => {
-        console.error('❌ Erreur lors de la synchronisation:', err);
-      });
+        // En production, juste créer les données de test si nécessaire
+        return createSampleData().catch(err => {
+          console.log('⚠️  Création données de test ignorée:', err.message);
+        });
+      }
     })
     .catch(err => {
       // Activer le mode démo quand PostgreSQL n'est pas disponible
