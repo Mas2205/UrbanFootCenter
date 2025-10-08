@@ -41,20 +41,22 @@ import { useAuth } from '../../contexts';
 // Types
 interface Reservation {
   id: string;
-  fieldId: string;
+  field_id: string;
   field: {
     id: string;
     name: string;
     location: string;
-    imageUrl: string;
+    imageUrl?: string;
   };
-  startTime: string;
-  endTime: string;
+  reservation_date: string;
+  start_time: string;
+  end_time: string;
   status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
-  paymentStatus: 'pending' | 'paid' | 'refunded';
-  price: number;
-  paymentMethod: string;
-  createdAt: string;
+  payment_status: 'pending' | 'paid' | 'refunded';
+  total_price: number;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 interface TabPanelProps {
@@ -266,42 +268,41 @@ const ReservationsList: React.FC = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                 <Event fontSize="small" sx={{ mr: 1 }} />
                 <Typography variant="body2">
-                  {new Date(reservation.startTime).toLocaleDateString()}
+                  {reservation.reservation_date ? new Date(reservation.reservation_date).toLocaleDateString('fr-FR') : 'Date non définie'}
                 </Typography>
               </Box>
               
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                 <AccessTime fontSize="small" sx={{ mr: 1 }} />
                 <Typography variant="body2">
-                  {new Date(reservation.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - 
-                  {new Date(reservation.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  {reservation.start_time || 'N/A'} - {reservation.end_time || 'N/A'}
                 </Typography>
               </Box>
               
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
                 <Typography variant="body1" fontWeight="bold">
-                  {reservation.price ? reservation.price.toLocaleString() : '0'} FCFA
+                  {reservation.total_price ? Number(reservation.total_price).toLocaleString() : '0'} FCFA
                 </Typography>
                 <Chip 
                   label={
-                    reservation.paymentStatus === 'paid' 
+                    reservation.payment_status === 'paid' 
                       ? t('reservations.paid') 
-                      : reservation.paymentStatus === 'refunded'
+                      : reservation.payment_status === 'refunded'
                         ? t('reservations.refunded')
                         : t('reservations.pendingPayment')
                   } 
                   color={
-                    reservation.paymentStatus === 'paid' 
+                    reservation.payment_status === 'paid' 
                       ? 'success' 
-                      : reservation.paymentStatus === 'refunded'
+                      : reservation.payment_status === 'refunded'
                         ? 'info'
                         : 'warning'
                   }
                   size="small"
                   icon={
-                    reservation.paymentStatus === 'paid' 
+                    reservation.payment_status === 'paid' 
                       ? <Check fontSize="small" /> 
-                      : reservation.paymentStatus === 'refunded'
+                      : reservation.payment_status === 'refunded'
                         ? <Receipt fontSize="small" />
                         : <Info fontSize="small" />
                   }
@@ -330,7 +331,7 @@ const ReservationsList: React.FC = () => {
                 variant="contained"
                 color="primary"
                 startIcon={<SportsSoccer />}
-                onClick={() => navigate(`/fields/${reservation.fieldId}`)}
+                onClick={() => navigate(`/fields/${reservation.field_id}`)}
               >
                 {t('reservations.fieldDetails')}
               </Button>
@@ -342,7 +343,7 @@ const ReservationsList: React.FC = () => {
               size="small"
               variant="outlined"
               startIcon={<SportsSoccer />}
-              onClick={() => navigate(`/fields/${reservation.fieldId}`)}
+              onClick={() => navigate(`/fields/${reservation.field_id}`)}
             >
               {t('reservations.fieldDetails')}
             </Button>
