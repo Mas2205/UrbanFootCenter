@@ -482,4 +482,42 @@ router.get('/setup-production', async (req, res) => {
   }
 });
 
+/**
+ * @route POST /api/admin-setup/create-sports-tables
+ * @desc Créer toutes les tables du système sportif en production
+ * @access Super Admin uniquement
+ */
+router.post('/create-sports-tables', async (req, res) => {
+  try {
+    console.log('🚀 === CRÉATION TABLES SYSTÈME SPORTIF ===');
+    
+    const { createSportsTables } = require('../../scripts/create-sports-tables-production');
+    await createSportsTables();
+    
+    res.json({
+      success: true,
+      message: 'Tables du système sportif créées avec succès',
+      tables: [
+        'equipes',
+        'membres_equipes', 
+        'demandes_equipes',
+        'tournois',
+        'participations_tournois',
+        'matchs_tournois',
+        'championnats',
+        'matchs_championnats',
+        'classement_championnat'
+      ]
+    });
+    
+  } catch (error) {
+    console.error('❌ Erreur création tables sportives:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la création des tables sportives',
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;
