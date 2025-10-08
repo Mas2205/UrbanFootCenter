@@ -1061,7 +1061,7 @@ const HomePage: React.FC = () => {
                 }
               }}>
                 <Box sx={{ 
-                  bgcolor: 'linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%)',
+                  bgcolor: 'linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%)',
                   borderRadius: '50%',
                   width: 100,
                   height: 100,
@@ -1071,19 +1071,19 @@ const HomePage: React.FC = () => {
                   mx: 'auto',
                   mb: 4
                 }}>
-                  <Groups sx={{ fontSize: 50, color: '#1976D2' }} />
+                  <EmojiEvents sx={{ fontSize: 50, color: '#F57C00' }} />
                 </Box>
                 <Typography variant="h4" gutterBottom sx={{ fontWeight: 600, color: '#1B5E20', mb: 3 }}>
-                  Formation d'équipes
+                  Championnat
                 </Typography>
                 <Typography variant="body1" color="text.secondary" paragraph sx={{ lineHeight: 1.7, mb: 4 }}>
-                  Trouvez des coéquipiers passionnés et formez votre équipe de rêve pour des matchs inoubliables.
+                  Participez à nos championnats officiels et montrez vos talents sur le terrain pour remporter des trophées.
                 </Typography>
                 <Button 
                   variant="contained" 
                   size="large"
                   sx={{
-                    bgcolor: '#1976D2',
+                    bgcolor: '#F57C00',
                     color: 'white',
                     px: 4,
                     py: 1.5,
@@ -1091,16 +1091,16 @@ const HomePage: React.FC = () => {
                     fontWeight: 600,
                     textTransform: 'none',
                     fontSize: '1.1rem',
-                    boxShadow: '0 8px 25px rgba(25, 118, 210, 0.3)',
+                    boxShadow: '0 8px 25px rgba(245, 124, 0, 0.3)',
                     '&:hover': {
-                      bgcolor: '#1565C0',
+                      bgcolor: '#EF6C00',
                       transform: 'translateY(-2px)',
-                      boxShadow: '0 12px 35px rgba(25, 118, 210, 0.4)'
+                      boxShadow: '0 12px 35px rgba(245, 124, 0, 0.4)'
                     },
                     transition: 'all 0.3s ease'
                   }}
                 >
-                  Rejoindre une équipe
+                  Voir les championnats
                 </Button>
               </Card>
             </Grid>
