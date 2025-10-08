@@ -862,24 +862,86 @@ router.get('/fix-tables-columns', async (req, res) => {
     const client = await pool.connect();
     
     try {
-      // Ajouter created_by à la table equipes si elle n'existe pas
-      console.log('🔧 Ajout colonne created_by à equipes...');
+      // Ajouter toutes les colonnes manquantes à la table equipes
+      console.log('🔧 Ajout colonnes manquantes à equipes...');
+      
       await client.query(`
         ALTER TABLE equipes 
         ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES users(id);
       `);
       
-      // Ajouter d'autres colonnes manquantes si nécessaire
-      console.log('🔧 Vérification autres colonnes...');
+      await client.query(`
+        ALTER TABLE equipes 
+        ADD COLUMN IF NOT EXISTS couleur_maillot VARCHAR(50);
+      `);
       
-      // Mettre à jour les équipes existantes avec un created_by par défaut
+      await client.query(`
+        ALTER TABLE equipes 
+        ADD COLUMN IF NOT EXISTS statut VARCHAR(20) DEFAULT 'active' CHECK (statut IN ('active', 'inactive', 'suspendue'));
+      `);
+      
+      // Ajouter colonnes manquantes à membres_equipes
+      console.log('🔧 Ajout colonnes manquantes à membres_equipes...');
+      
+      await client.query(`
+        ALTER TABLE membres_equipes 
+        ADD COLUMN IF NOT EXISTS numero_maillot INTEGER;
+      `);
+      
+      await client.query(`
+        ALTER TABLE membres_equipes 
+        ADD COLUMN IF NOT EXISTS poste VARCHAR(50);
+      `);
+      
+      await client.query(`
+        ALTER TABLE membres_equipes 
+        ADD COLUMN IF NOT EXISTS statut VARCHAR(20) DEFAULT 'actif' CHECK (statut IN ('actif', 'inactif', 'suspendu'));
+      `);
+      
+      await client.query(`
+        ALTER TABLE membres_equipes 
+        ADD COLUMN IF NOT EXISTS joined_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+      `);
+      
+      await client.query(`
+        ALTER TABLE membres_equipes 
+        ADD COLUMN IF NOT EXISTS added_by UUID REFERENCES users(id);
+      `);
+      
+      // Mettre à jour les valeurs par défaut
+      console.log('🔧 Mise à jour valeurs par défaut...');
+      
       await client.query(`
         UPDATE equipes 
         SET created_by = capitaine_id 
         WHERE created_by IS NULL;
       `);
       
-      console.log('✅ Colonnes corrigées avec succès');
+      await client.query(`
+        UPDATE equipes 
+        SET couleur_maillot = 'Bleu' 
+        WHERE couleur_maillot IS NULL;
+      `);
+      
+      await client.query(`
+        UPDATE equipes 
+        SET statut = 'active' 
+        WHERE statut IS NULL;
+      `);
+      
+      await client.query(`
+        UPDATE membres_equipes 
+        SET statut = 'actif' 
+        WHERE statut IS NULL;
+      `);
+      
+      await client.query(`
+        UPDATE membres_equipes 
+        SET joined_at = date_adhesion 
+        WHERE joined_at IS NULL AND date_adhesion IS NOT NULL;
+      `);
+      
+      console.log('✅ Toutes les colonnes corrigées avec succès');
       
     } finally {
       client.release();
@@ -902,7 +964,22 @@ router.get('/fix-tables-columns', async (req, res) => {
           <strong>Succès !</strong> Toutes les colonnes manquantes ont été ajoutées.
         </div>
         
-        <p>✅ Colonne <code>created_by</code> ajoutée à la table <code>equipes</code></p>
+        <p>✅ Colonnes ajoutées à la table <code>equipes</code> :</p>
+        <ul>
+          <li><code>created_by</code> - Créateur de l'équipe</li>
+          <li><code>couleur_maillot</code> - Couleur du maillot</li>
+          <li><code>statut</code> - Statut de l'équipe</li>
+        </ul>
+        
+        <p>✅ Colonnes ajoutées à la table <code>membres_equipes</code> :</p>
+        <ul>
+          <li><code>numero_maillot</code> - Numéro de maillot</li>
+          <li><code>poste</code> - Poste du joueur</li>
+          <li><code>statut</code> - Statut du membre</li>
+          <li><code>joined_at</code> - Date d'adhésion</li>
+          <li><code>added_by</code> - Ajouté par</li>
+        </ul>
+        
         <p>✅ Valeurs par défaut définies</p>
         
         <p><a href="https://urban-foot-center.vercel.app/admin" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">← Retour au tableau de bord admin</a></p>
