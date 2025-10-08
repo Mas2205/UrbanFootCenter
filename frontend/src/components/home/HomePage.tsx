@@ -961,6 +961,7 @@ const HomePage: React.FC = () => {
                 <Button 
                   variant="contained" 
                   size="large"
+                  onClick={() => navigate('/fields')}
                   sx={{
                     bgcolor: '#1B5E20',
                     color: 'white',
