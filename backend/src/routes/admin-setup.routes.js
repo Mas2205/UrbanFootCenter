@@ -1075,4 +1075,174 @@ router.get('/fix-tables-columns', async (req, res) => {
   }
 });
 
+/**
+ * @route GET /api/admin-setup/populate-test-data
+ * @desc Peupler la production avec des données de test
+ * @access Public
+ */
+router.get('/populate-test-data', async (req, res) => {
+  try {
+    console.log('🚀 === PEUPLEMENT DONNÉES DE TEST ===');
+    
+    const { populateProductionData } = require('../../scripts/populate-production-data');
+    await populateProductionData();
+    
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Données de Test Créées</title>
+        <style>
+          body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+          .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 15px; border-radius: 5px; }
+          .info { background: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; padding: 15px; border-radius: 5px; margin: 20px 0; }
+          h1 { color: #28a745; }
+          ul { list-style-type: none; padding: 0; }
+          li { padding: 5px 0; }
+          li:before { content: "✅ "; }
+        </style>
+      </head>
+      <body>
+        <h1>🎉 Données de test créées !</h1>
+        
+        <div class="success">
+          <strong>Succès !</strong> Votre base de production a été peuplée avec des données de test.
+        </div>
+        
+        <div class="info">
+          <h3>📊 Données créées :</h3>
+          <ul>
+            <li><strong>4 équipes</strong> : FC Lions, AS Eagles, Real Warriors, Barcelona Stars</li>
+            <li><strong>Membres d'équipes</strong> : Capitaines et joueurs assignés</li>
+            <li><strong>1 tournoi de test</strong> : "Tournoi de Test" en élimination directe</li>
+            <li><strong>Inscriptions</strong> : Les 4 équipes inscrites au tournoi</li>
+            <li><strong>2 demandes d'équipes</strong> : FC Juventus et AC Milan en attente</li>
+          </ul>
+        </div>
+        
+        <p><strong>🎯 Maintenant vous pouvez tester :</strong></p>
+        <ul>
+          <li>🏆 <a href="https://urban-foot-center.vercel.app/admin/equipes">Voir les équipes créées</a></li>
+          <li>🥇 <a href="https://urban-foot-center.vercel.app/admin/tournois">Gérer le tournoi de test</a></li>
+          <li>🎲 <strong>Faire le tirage au sort</strong> du tournoi</li>
+          <li>⚽ <strong>Générer les matchs</strong> automatiquement</li>
+        </ul>
+        
+        <p><a href="https://urban-foot-center.vercel.app/admin" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">← Retour au tableau de bord admin</a></p>
+      </body>
+      </html>
+    `);
+    
+  } catch (error) {
+    console.error('❌ Erreur peuplement données:', error);
+    res.status(500).send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Erreur Peuplement</title>
+        <style>
+          body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+          .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 15px; border-radius: 5px; }
+        </style>
+      </head>
+      <body>
+        <h1>❌ Erreur peuplement</h1>
+        <div class="error">
+          <strong>Erreur :</strong> ${error.message}
+        </div>
+        <p><a href="https://urban-foot-center.vercel.app/admin">← Retour au tableau de bord admin</a></p>
+      </body>
+      </html>
+    `);
+  }
+});
+
+/**
+ * @route GET /api/admin-setup/insert-real-data
+ * @desc Insérer les vraies données de la base locale en production
+ * @access Public
+ */
+router.get('/insert-real-data', async (req, res) => {
+  try {
+    console.log('🚀 === INSERTION DONNÉES RÉELLES ===');
+    
+    const { insertRealDataToProduction } = require('../../scripts/insert-real-data-production');
+    await insertRealDataToProduction();
+    
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Données Réelles Insérées</title>
+        <style>
+          body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+          .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 15px; border-radius: 5px; }
+          .info { background: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; padding: 15px; border-radius: 5px; margin: 20px 0; }
+          h1 { color: #28a745; }
+          ul { list-style-type: none; padding: 0; }
+          li { padding: 5px 0; }
+          li:before { content: "✅ "; }
+        </style>
+      </head>
+      <body>
+        <h1>🎉 Données réelles insérées !</h1>
+        
+        <div class="success">
+          <strong>Succès !</strong> Toutes vos données réelles ont été copiées en production.
+        </div>
+        
+        <div class="info">
+          <h3>📊 Données insérées :</h3>
+          <ul>
+            <li><strong>5 terrains</strong> : URBAN FOOT CENTER, Terrain Tiv, Terrain DAKAR, etc.</li>
+            <li><strong>7 utilisateurs</strong> : Admins et clients avec leurs vrais comptes</li>
+            <li><strong>5 équipes</strong> : Équipe Test FC, djeddah, mas_client@ex.com, etc.</li>
+            <li><strong>2 tournois</strong> : "Tournoi foot" (en cours) et "tournois mas"</li>
+          </ul>
+        </div>
+        
+        <p><strong>🎯 Vos vraies données sont maintenant en production !</strong></p>
+        <ul>
+          <li>🏆 <a href="https://urban-foot-center.vercel.app/admin/equipes">Voir vos équipes réelles</a></li>
+          <li>🥇 <a href="https://urban-foot-center.vercel.app/admin/tournois">Gérer vos tournois réels</a></li>
+          <li>🏟️ <a href="https://urban-foot-center.vercel.app/admin/fields">Voir vos terrains</a></li>
+          <li>👥 <a href="https://urban-foot-center.vercel.app/admin/users">Gérer vos utilisateurs</a></li>
+        </ul>
+        
+        <p><strong>⚡ Prêt à tester :</strong></p>
+        <ul>
+          <li>🎲 Faire le tirage au sort du "Tournoi foot"</li>
+          <li>⚽ Générer les matchs automatiquement</li>
+          <li>📊 Consulter les classements</li>
+        </ul>
+        
+        <p><a href="https://urban-foot-center.vercel.app/admin" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">← Retour au tableau de bord admin</a></p>
+      </body>
+      </html>
+    `);
+    
+  } catch (error) {
+    console.error('❌ Erreur insertion données réelles:', error);
+    res.status(500).send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Erreur Insertion</title>
+        <style>
+          body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+          .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 15px; border-radius: 5px; }
+        </style>
+      </head>
+      <body>
+        <h1>❌ Erreur insertion</h1>
+        <div class="error">
+          <strong>Erreur :</strong> ${error.message}
+        </div>
+        <p><a href="https://urban-foot-center.vercel.app/admin">← Retour au tableau de bord admin</a></p>
+      </body>
+      </html>
+    `);
+  }
+});
+
 module.exports = router;
