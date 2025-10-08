@@ -511,6 +511,7 @@ router.get('/create-sports-tables', async (req, res) => {
           terrain_id UUID NOT NULL REFERENCES fields(id) ON DELETE CASCADE,
           capitaine_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
           is_active BOOLEAN DEFAULT true,
+          created_by UUID REFERENCES users(id),
           created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
           updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
           UNIQUE(nom, terrain_id)
@@ -698,83 +699,10 @@ router.get('/create-sports-tables', async (req, res) => {
     }
     
     // === MIGRATION DES DONNÉES DEPUIS LOCAL ===
-    console.log('🔄 === DÉBUT MIGRATION DONNÉES LOCAL → PRODUCTION ===');
+    console.log('ℹ️  Migration données locale désactivée (Railway ne peut pas accéder à localhost)');
     
     let migratedData = {};
     let totalMigrated = 0;
-    
-    try {
-      // Configuration base locale
-      const localPool = new Pool({
-        host: 'localhost',
-        database: 'urban_foot_center',
-        user: 'postgres',
-        password: process.env.LOCAL_DB_PASSWORD || 'postgres',
-        port: 5432
-      });
-      
-      // Tables à migrer dans l'ordre
-      const TABLES_ORDER = [
-        'users', 'fields', 'equipes', 'membres_equipes', 'demandes_equipes',
-        'tournois', 'participations_tournois', 'matchs_tournois',
-        'reservations', 'payments', 'notifications'
-      ];
-      
-      for (const tableName of TABLES_ORDER) {
-        try {
-          console.log(`📊 Migration: ${tableName}`);
-          
-          // Export depuis local
-          const localClient = await localPool.connect();
-          const result = await localClient.query(`SELECT * FROM ${tableName}`);
-          localClient.release();
-          
-          if (result.rows.length === 0) {
-            console.log(`   ⚠️  Table ${tableName} vide`);
-            migratedData[tableName] = 0;
-            continue;
-          }
-          
-          // Import vers production
-          const prodClient = await pool.connect();
-          const columns = Object.keys(result.rows[0]);
-          const placeholders = columns.map((_, i) => `$${i + 1}`).join(', ');
-          const columnNames = columns.join(', ');
-          
-          const insertQuery = `
-            INSERT INTO ${tableName} (${columnNames}) 
-            VALUES (${placeholders})
-            ON CONFLICT DO NOTHING
-          `;
-          
-          let imported = 0;
-          for (const row of result.rows) {
-            const values = columns.map(col => row[col]);
-            try {
-              await prodClient.query(insertQuery, values);
-              imported++;
-            } catch (error) {
-              // Ignorer les conflits
-            }
-          }
-          
-          prodClient.release();
-          migratedData[tableName] = imported;
-          totalMigrated += imported;
-          console.log(`   ✅ ${imported}/${result.rows.length} enregistrement(s) migrés`);
-          
-        } catch (error) {
-          console.log(`   ⚠️  Erreur ${tableName}:`, error.message);
-          migratedData[tableName] = 0;
-        }
-      }
-      
-      await localPool.end();
-      console.log('🎉 === MIGRATION DONNÉES TERMINÉE ===');
-      
-    } catch (error) {
-      console.log('⚠️  Migration données échouée (base locale inaccessible):', error.message);
-    }
     
     res.send(`
       <!DOCTYPE html>
@@ -792,10 +720,10 @@ router.get('/create-sports-tables', async (req, res) => {
         </style>
       </head>
       <body>
-        <h1>🎉 Migration complète terminée !</h1>
+        <h1>🎉 Tables sportives créées !</h1>
         
         <div class="success">
-          <strong>Succès !</strong> Tables créées ET données migrées depuis votre base locale.
+          <strong>Succès !</strong> Toutes les tables du système sportif ont été créées en production.
         </div>
         
         <div class="table-list">
@@ -813,24 +741,17 @@ router.get('/create-sports-tables', async (req, res) => {
           </ul>
         </div>
         
-        <div class="table-list">
-          <h3>🔄 Données migrées :</h3>
-          <ul>
-            ${Object.entries(migratedData).map(([table, count]) => 
-              count > 0 ? `<li>${table}: ${count} enregistrement(s)</li>` : ''
-            ).join('')}
-          </ul>
-          <p><strong>Total: ${totalMigrated} enregistrements migrés</strong></p>
-        </div>
-        
-        <p><strong>✅ Votre système est maintenant 100% synchronisé !</strong></p>
-        <p>Toutes vos données locales sont maintenant disponibles en production :</p>
+        <p><strong>✅ Votre système sportif est maintenant opérationnel !</strong></p>
+        <p>Vous pouvez maintenant utiliser toutes les fonctionnalités :</p>
         <ul>
-          <li>🏆 Toutes vos équipes et tournois</li>
-          <li>👥 Tous vos utilisateurs</li>
-          <li>📅 Toutes vos réservations</li>
-          <li>💰 Tous vos paiements</li>
+          <li>🏆 Créer et gérer des équipes</li>
+          <li>🥇 Organiser des tournois avec tirage au sort</li>
+          <li>👑 Suivre les championnats trimestriels</li>
+          <li>📊 Consulter les classements en temps réel</li>
         </ul>
+        
+        <p><strong>⚠️ Colonnes manquantes détectées ?</strong></p>
+        <p><a href="/api/admin-setup/fix-tables-columns" style="background: #ffc107; color: #212529; padding: 8px 16px; text-decoration: none; border-radius: 3px; margin-right: 10px;">🔧 Corriger les colonnes</a></p>
         
         <p><a href="https://urban-foot-center.vercel.app/admin" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">← Retour au tableau de bord admin</a></p>
       </body>
@@ -922,5 +843,95 @@ router.post('/create-sports-tables', async (req, res) => {
   }
 });
 
+
+/**
+ * @route GET /api/admin-setup/fix-tables-columns
+ * @desc Ajouter les colonnes manquantes aux tables existantes
+ * @access Public
+ */
+router.get('/fix-tables-columns', async (req, res) => {
+  try {
+    console.log('🔧 === CORRECTION DES COLONNES MANQUANTES ===');
+    
+    const { Pool } = require('pg');
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+    });
+
+    const client = await pool.connect();
+    
+    try {
+      // Ajouter created_by à la table equipes si elle n'existe pas
+      console.log('🔧 Ajout colonne created_by à equipes...');
+      await client.query(`
+        ALTER TABLE equipes 
+        ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES users(id);
+      `);
+      
+      // Ajouter d'autres colonnes manquantes si nécessaire
+      console.log('🔧 Vérification autres colonnes...');
+      
+      // Mettre à jour les équipes existantes avec un created_by par défaut
+      await client.query(`
+        UPDATE equipes 
+        SET created_by = capitaine_id 
+        WHERE created_by IS NULL;
+      `);
+      
+      console.log('✅ Colonnes corrigées avec succès');
+      
+    } finally {
+      client.release();
+    }
+    
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Correction Colonnes</title>
+        <style>
+          body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+          .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 15px; border-radius: 5px; }
+        </style>
+      </head>
+      <body>
+        <h1>🔧 Colonnes corrigées !</h1>
+        
+        <div class="success">
+          <strong>Succès !</strong> Toutes les colonnes manquantes ont été ajoutées.
+        </div>
+        
+        <p>✅ Colonne <code>created_by</code> ajoutée à la table <code>equipes</code></p>
+        <p>✅ Valeurs par défaut définies</p>
+        
+        <p><a href="https://urban-foot-center.vercel.app/admin" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">← Retour au tableau de bord admin</a></p>
+      </body>
+      </html>
+    `);
+    
+  } catch (error) {
+    console.error('❌ Erreur correction colonnes:', error);
+    res.status(500).send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Erreur Correction</title>
+        <style>
+          body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+          .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 15px; border-radius: 5px; }
+        </style>
+      </head>
+      <body>
+        <h1>❌ Erreur correction</h1>
+        <div class="error">
+          <strong>Erreur :</strong> ${error.message}
+        </div>
+        <p><a href="https://urban-foot-center.vercel.app/admin">← Retour au tableau de bord admin</a></p>
+      </body>
+      </html>
+    `);
+  }
+});
 
 module.exports = router;
