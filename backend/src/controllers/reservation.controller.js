@@ -382,7 +382,7 @@ exports.getUserReservations = async (req, res) => {
           },
           {
             status: {
-              [Op.notIn]: ['cancelled'] // Non annulées
+              [Op.in]: ['pending', 'confirmed'] // En attente ou confirmées (pas annulées ni terminées)
             }
           }
         ];
@@ -410,7 +410,7 @@ exports.getUserReservations = async (req, res) => {
           },
           {
             status: {
-              [Op.notIn]: ['cancelled'] // Non annulées
+              [Op.in]: ['confirmed', 'completed'] // Confirmées ou terminées (pas annulées ni en attente)
             }
           }
         ];

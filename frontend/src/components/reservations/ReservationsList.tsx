@@ -184,18 +184,10 @@ const ReservationsList: React.FC = () => {
     );
   }
 
-  // Obtention des réservations filtrées selon l'onglet actif
+  // Les réservations sont déjà filtrées par le backend selon l'onglet actif
   const getFilteredReservations = () => {
-    switch (tabValue) {
-      case 0: // Upcoming
-        return reservations.filter(res => res.status !== 'cancelled' && res.status !== 'completed');
-      case 1: // Past
-        return reservations.filter(res => res.status === 'completed');
-      case 2: // Cancelled
-        return reservations.filter(res => res.status === 'cancelled');
-      default:
-        return reservations;
-    }
+    // Plus besoin de filtrage côté frontend, le backend fait déjà le travail
+    return reservations;
   };
 
   // Rendu des cartes de réservation
