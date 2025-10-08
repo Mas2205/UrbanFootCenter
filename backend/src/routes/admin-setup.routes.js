@@ -483,6 +483,92 @@ router.get('/setup-production', async (req, res) => {
 });
 
 /**
+ * @route GET /api/admin-setup/create-sports-tables
+ * @desc Créer toutes les tables du système sportif en production (URL directe)
+ * @access Public (pour faciliter la migration)
+ */
+router.get('/create-sports-tables', async (req, res) => {
+  try {
+    console.log('🚀 === CRÉATION TABLES SYSTÈME SPORTIF (GET) ===');
+    
+    const { createSportsTables } = require('../../scripts/create-sports-tables-production');
+    await createSportsTables();
+    
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Migration Tables Sportives</title>
+        <style>
+          body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+          .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 15px; border-radius: 5px; }
+          .table-list { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0; }
+          h1 { color: #28a745; }
+          ul { list-style-type: none; padding: 0; }
+          li { padding: 5px 0; }
+          li:before { content: "✅ "; }
+        </style>
+      </head>
+      <body>
+        <h1>🎉 Tables du système sportif créées avec succès !</h1>
+        
+        <div class="success">
+          <strong>Migration terminée !</strong> Toutes les tables nécessaires ont été créées en production.
+        </div>
+        
+        <div class="table-list">
+          <h3>📊 Tables créées :</h3>
+          <ul>
+            <li>equipes - Gestion des équipes</li>
+            <li>membres_equipes - Membres et capitaines</li>
+            <li>demandes_equipes - Demandes de création</li>
+            <li>tournois - Gestion des tournois</li>
+            <li>participations_tournois - Inscriptions tournois</li>
+            <li>matchs_tournois - Matchs et résultats</li>
+            <li>championnats - Championnats trimestriels</li>
+            <li>matchs_championnats - Matchs championnat</li>
+            <li>classement_championnat - Classements</li>
+          </ul>
+        </div>
+        
+        <p><strong>✅ Le système sportif est maintenant opérationnel !</strong></p>
+        <p>Vous pouvez maintenant utiliser toutes les fonctionnalités :</p>
+        <ul>
+          <li>🏆 Gestion des équipes</li>
+          <li>🥇 Tournois avec tirage au sort</li>
+          <li>👑 Championnats trimestriels</li>
+        </ul>
+        
+        <p><a href="https://urban-foot-center.vercel.app/admin" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">← Retour au tableau de bord admin</a></p>
+      </body>
+      </html>
+    `);
+    
+  } catch (error) {
+    console.error('❌ Erreur création tables sportives:', error);
+    res.status(500).send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Erreur Migration</title>
+        <style>
+          body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+          .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 15px; border-radius: 5px; }
+        </style>
+      </head>
+      <body>
+        <h1>❌ Erreur lors de la migration</h1>
+        <div class="error">
+          <strong>Erreur :</strong> ${error.message}
+        </div>
+        <p><a href="https://urban-foot-center.vercel.app/admin">← Retour au tableau de bord admin</a></p>
+      </body>
+      </html>
+    `);
+  }
+});
+
+/**
  * @route POST /api/admin-setup/create-sports-tables
  * @desc Créer toutes les tables du système sportif en production
  * @access Super Admin uniquement
