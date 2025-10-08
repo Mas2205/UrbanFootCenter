@@ -995,7 +995,245 @@ router.get('/fix-tables-columns', async (req, res) => {
         WHERE indoor IS NULL;
       `);
       
-      console.log('✅ Toutes les colonnes corrigées avec succès');
+      // Ajouter colonnes manquantes à demandes_equipes
+      console.log('🔧 Ajout colonnes manquantes à demandes_equipes...');
+      
+      await client.query(`
+        ALTER TABLE demandes_equipes 
+        ADD COLUMN IF NOT EXISTS couleur_maillot VARCHAR(50);
+      `);
+      
+      await client.query(`
+        ALTER TABLE demandes_equipes 
+        ADD COLUMN IF NOT EXISTS notes_admin TEXT;
+      `);
+      
+      // Ajouter colonnes manquantes à tournois
+      console.log('🔧 Ajout colonnes manquantes à tournois...');
+      
+      await client.query(`
+        ALTER TABLE tournois 
+        ADD COLUMN IF NOT EXISTS regles TEXT;
+      `);
+      
+      await client.query(`
+        ALTER TABLE tournois 
+        ADD COLUMN IF NOT EXISTS nombre_equipes_qualifiees INTEGER DEFAULT 4;
+      `);
+      
+      // Ajouter colonnes manquantes à participations_tournois
+      console.log('🔧 Ajout colonnes manquantes à participations_tournois...');
+      
+      await client.query(`
+        ALTER TABLE participations_tournois 
+        ADD COLUMN IF NOT EXISTS validated_at TIMESTAMP WITH TIME ZONE;
+      `);
+      
+      await client.query(`
+        ALTER TABLE participations_tournois 
+        ADD COLUMN IF NOT EXISTS validated_by UUID REFERENCES users(id);
+      `);
+      
+      await client.query(`
+        ALTER TABLE participations_tournois 
+        ADD COLUMN IF NOT EXISTS motif_refus TEXT;
+      `);
+      
+      await client.query(`
+        ALTER TABLE participations_tournois 
+        ADD COLUMN IF NOT EXISTS frais_payes BOOLEAN DEFAULT false;
+      `);
+      
+      await client.query(`
+        ALTER TABLE participations_tournois 
+        ADD COLUMN IF NOT EXISTS date_paiement TIMESTAMP WITH TIME ZONE;
+      `);
+      
+      await client.query(`
+        ALTER TABLE participations_tournois 
+        ADD COLUMN IF NOT EXISTS groupe_poule VARCHAR(10);
+      `);
+      
+      await client.query(`
+        ALTER TABLE participations_tournois 
+        ADD COLUMN IF NOT EXISTS position_finale INTEGER;
+      `);
+      
+      await client.query(`
+        ALTER TABLE participations_tournois 
+        ADD COLUMN IF NOT EXISTS points_poule INTEGER DEFAULT 0;
+      `);
+      
+      await client.query(`
+        ALTER TABLE participations_tournois 
+        ADD COLUMN IF NOT EXISTS victoires_poule INTEGER DEFAULT 0;
+      `);
+      
+      await client.query(`
+        ALTER TABLE participations_tournois 
+        ADD COLUMN IF NOT EXISTS nuls_poule INTEGER DEFAULT 0;
+      `);
+      
+      await client.query(`
+        ALTER TABLE participations_tournois 
+        ADD COLUMN IF NOT EXISTS defaites_poule INTEGER DEFAULT 0;
+      `);
+      
+      await client.query(`
+        ALTER TABLE participations_tournois 
+        ADD COLUMN IF NOT EXISTS buts_marques_poule INTEGER DEFAULT 0;
+      `);
+      
+      await client.query(`
+        ALTER TABLE participations_tournois 
+        ADD COLUMN IF NOT EXISTS buts_encaisses_poule INTEGER DEFAULT 0;
+      `);
+      
+      // Ajouter colonnes manquantes à matchs_tournois
+      console.log('🔧 Ajout colonnes manquantes à matchs_tournois...');
+      
+      await client.query(`
+        ALTER TABLE matchs_tournois 
+        ADD COLUMN IF NOT EXISTS groupe_poule VARCHAR(10);
+      `);
+      
+      await client.query(`
+        ALTER TABLE matchs_tournois 
+        ADD COLUMN IF NOT EXISTS score1_prolongation INTEGER;
+      `);
+      
+      await client.query(`
+        ALTER TABLE matchs_tournois 
+        ADD COLUMN IF NOT EXISTS score2_prolongation INTEGER;
+      `);
+      
+      await client.query(`
+        ALTER TABLE matchs_tournois 
+        ADD COLUMN IF NOT EXISTS tirs_au_but_equipe1 INTEGER;
+      `);
+      
+      await client.query(`
+        ALTER TABLE matchs_tournois 
+        ADD COLUMN IF NOT EXISTS tirs_au_but_equipe2 INTEGER;
+      `);
+      
+      await client.query(`
+        ALTER TABLE matchs_tournois 
+        ADD COLUMN IF NOT EXISTS winner_id UUID REFERENCES equipes(id);
+      `);
+      
+      await client.query(`
+        ALTER TABLE matchs_tournois 
+        ADD COLUMN IF NOT EXISTS arbitre VARCHAR(100);
+      `);
+      
+      await client.query(`
+        ALTER TABLE matchs_tournois 
+        ADD COLUMN IF NOT EXISTS notes TEXT;
+      `);
+      
+      await client.query(`
+        ALTER TABLE matchs_tournois 
+        ADD COLUMN IF NOT EXISTS updated_by UUID REFERENCES users(id);
+      `);
+      
+      // Ajouter colonnes manquantes à championnats
+      console.log('🔧 Ajout colonnes manquantes à championnats...');
+      
+      await client.query(`
+        ALTER TABLE championnats 
+        ADD COLUMN IF NOT EXISTS periode VARCHAR(20) NOT NULL DEFAULT 'T1';
+      `);
+      
+      await client.query(`
+        ALTER TABLE championnats 
+        ADD COLUMN IF NOT EXISTS annee INTEGER NOT NULL DEFAULT EXTRACT(YEAR FROM NOW());
+      `);
+      
+      await client.query(`
+        ALTER TABLE championnats 
+        ADD COLUMN IF NOT EXISTS date_debut TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+      `);
+      
+      await client.query(`
+        ALTER TABLE championnats 
+        ADD COLUMN IF NOT EXISTS date_fin TIMESTAMP WITH TIME ZONE DEFAULT NOW() + INTERVAL '3 months';
+      `);
+      
+      await client.query(`
+        ALTER TABLE championnats 
+        ADD COLUMN IF NOT EXISTS statut VARCHAR(20) DEFAULT 'actif' CHECK (statut IN ('actif', 'termine', 'suspendu'));
+      `);
+      
+      await client.query(`
+        ALTER TABLE championnats 
+        ADD COLUMN IF NOT EXISTS description TEXT;
+      `);
+      
+      await client.query(`
+        ALTER TABLE championnats 
+        ADD COLUMN IF NOT EXISTS recompenses TEXT;
+      `);
+      
+      // Ajouter colonnes manquantes à classement_championnat
+      console.log('🔧 Ajout colonnes manquantes à classement_championnat...');
+      
+      await client.query(`
+        ALTER TABLE classement_championnat 
+        ADD COLUMN IF NOT EXISTS matchs_joues INTEGER DEFAULT 0;
+      `);
+      
+      await client.query(`
+        ALTER TABLE classement_championnat 
+        ADD COLUMN IF NOT EXISTS difference_buts INTEGER DEFAULT 0;
+      `);
+      
+      await client.query(`
+        ALTER TABLE classement_championnat 
+        ADD COLUMN IF NOT EXISTS forme VARCHAR(10);
+      `);
+      
+      await client.query(`
+        ALTER TABLE classement_championnat 
+        ADD COLUMN IF NOT EXISTS derniere_maj TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+      `);
+      
+      // Mettre à jour les valeurs par défaut
+      console.log('🔧 Mise à jour valeurs par défaut pour toutes les tables...');
+      
+      await client.query(`
+        UPDATE demandes_equipes 
+        SET couleur_maillot = '#FF6B35' 
+        WHERE couleur_maillot IS NULL;
+      `);
+      
+      await client.query(`
+        UPDATE tournois 
+        SET nombre_equipes_qualifiees = 4 
+        WHERE nombre_equipes_qualifiees IS NULL;
+      `);
+      
+      await client.query(`
+        UPDATE participations_tournois 
+        SET points_poule = 0, victoires_poule = 0, nuls_poule = 0, 
+            defaites_poule = 0, buts_marques_poule = 0, buts_encaisses_poule = 0,
+            frais_payes = false
+        WHERE points_poule IS NULL;
+      `);
+      
+      await client.query(`
+        UPDATE championnats 
+        SET statut = 'actif' 
+        WHERE statut IS NULL;
+      `);
+      
+      await client.query(`
+        UPDATE classement_championnat 
+        SET matchs_joues = 0, difference_buts = 0, derniere_maj = NOW()
+        WHERE matchs_joues IS NULL;
+      `);
+      
+      console.log('✅ TOUTES les colonnes sportives corrigées avec succès');
       
     } finally {
       client.release();
@@ -1015,36 +1253,22 @@ router.get('/fix-tables-columns', async (req, res) => {
         <h1>🔧 Colonnes corrigées !</h1>
         
         <div class="success">
-          <strong>Succès !</strong> Toutes les colonnes manquantes ont été ajoutées.
+          <strong>Succès !</strong> TOUTES les colonnes manquantes du système sportif ont été ajoutées.
         </div>
         
-        <p>✅ Colonnes ajoutées à la table <code>equipes</code> :</p>
-        <ul>
-          <li><code>created_by</code> - Créateur de l'équipe</li>
-          <li><code>couleur_maillot</code> - Couleur du maillot</li>
-          <li><code>statut</code> - Statut de l'équipe</li>
-        </ul>
+        <h3>📊 Colonnes ajoutées par table :</h3>
         
-        <p>✅ Colonnes ajoutées à la table <code>membres_equipes</code> :</p>
-        <ul>
-          <li><code>numero_maillot</code> - Numéro de maillot</li>
-          <li><code>poste</code> - Poste du joueur</li>
-          <li><code>statut</code> - Statut du membre</li>
-          <li><code>joined_at</code> - Date d'adhésion</li>
-          <li><code>added_by</code> - Ajouté par</li>
-        </ul>
+        <p>✅ <strong>equipes</strong> : created_by, couleur_maillot, statut</p>
+        <p>✅ <strong>membres_equipes</strong> : numero_maillot, poste, statut, joined_at, added_by</p>
+        <p>✅ <strong>fields</strong> : equipment_fee, owner_payout_channel, owner_mobile_e164, owner_bank_info, commission_rate_bps, indoor</p>
+        <p>✅ <strong>demandes_equipes</strong> : couleur_maillot, notes_admin</p>
+        <p>✅ <strong>tournois</strong> : regles, nombre_equipes_qualifiees</p>
+        <p>✅ <strong>participations_tournois</strong> : validated_at, validated_by, motif_refus, frais_payes, date_paiement, groupe_poule, position_finale, points_poule, victoires_poule, nuls_poule, defaites_poule, buts_marques_poule, buts_encaisses_poule</p>
+        <p>✅ <strong>matchs_tournois</strong> : groupe_poule, score1_prolongation, score2_prolongation, tirs_au_but_equipe1, tirs_au_but_equipe2, winner_id, arbitre, notes, updated_by</p>
+        <p>✅ <strong>championnats</strong> : periode, annee, date_debut, date_fin, statut, description, recompenses</p>
+        <p>✅ <strong>classement_championnat</strong> : matchs_joues, difference_buts, forme, derniere_maj</p>
         
-        <p>✅ Colonnes ajoutées à la table <code>fields</code> :</p>
-        <ul>
-          <li><code>equipment_fee</code> - Frais équipement</li>
-          <li><code>owner_payout_channel</code> - Canal de paiement propriétaire</li>
-          <li><code>owner_mobile_e164</code> - Mobile propriétaire</li>
-          <li><code>owner_bank_info</code> - Infos bancaires</li>
-          <li><code>commission_rate_bps</code> - Taux de commission</li>
-          <li><code>indoor</code> - Terrain couvert</li>
-        </ul>
-        
-        <p>✅ Valeurs par défaut définies pour toutes les tables</p>
+        <p><strong>🎯 Système sportif maintenant 100% complet !</strong></p>
         
         <p><a href="https://urban-foot-center.vercel.app/admin" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">← Retour au tableau de bord admin</a></p>
       </body>
