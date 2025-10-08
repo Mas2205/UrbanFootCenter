@@ -37,7 +37,8 @@ import {
   EmojiEvents,
   Groups,
   Star,
-  KeyboardArrowDown
+  KeyboardArrowDown,
+  WorkspacePremium
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts';
 import fieldAPI, { Field as FieldType } from '../../services/api/fieldAPI';
@@ -1001,7 +1002,7 @@ const HomePage: React.FC = () => {
                 }
               }}>
                 <Box sx={{ 
-                  bgcolor: 'linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%)',
+                  bgcolor: 'linear-gradient(135deg, #FFF8E1 0%, #FFECB3 100%)',
                   borderRadius: '50%',
                   width: 100,
                   height: 100,
@@ -1011,7 +1012,7 @@ const HomePage: React.FC = () => {
                   mx: 'auto',
                   mb: 4
                 }}>
-                  <EmojiEvents sx={{ fontSize: 50, color: '#F57C00' }} />
+                  <EmojiEvents sx={{ fontSize: 50, color: '#FFC107' }} />
                 </Box>
                 <Typography variant="h4" gutterBottom sx={{ fontWeight: 600, color: '#1B5E20', mb: 3 }}>
                   Tournois
@@ -1023,7 +1024,7 @@ const HomePage: React.FC = () => {
                   variant="contained" 
                   size="large"
                   sx={{
-                    bgcolor: '#F57C00',
+                    bgcolor: '#FFC107',
                     color: 'white',
                     px: 4,
                     py: 1.5,
@@ -1031,11 +1032,11 @@ const HomePage: React.FC = () => {
                     fontWeight: 600,
                     textTransform: 'none',
                     fontSize: '1.1rem',
-                    boxShadow: '0 8px 25px rgba(245, 124, 0, 0.3)',
+                    boxShadow: '0 8px 25px rgba(255, 193, 7, 0.3)',
                     '&:hover': {
-                      bgcolor: '#FF8F00',
+                      bgcolor: '#FFB300',
                       transform: 'translateY(-2px)',
-                      boxShadow: '0 12px 35px rgba(245, 124, 0, 0.4)'
+                      boxShadow: '0 12px 35px rgba(255, 193, 7, 0.4)'
                     },
                     transition: 'all 0.3s ease'
                   }}
@@ -1061,7 +1062,7 @@ const HomePage: React.FC = () => {
                 }
               }}>
                 <Box sx={{ 
-                  bgcolor: 'linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%)',
+                  bgcolor: 'linear-gradient(135deg, #FFEBEE 0%, #FFCDD2 100%)',
                   borderRadius: '50%',
                   width: 100,
                   height: 100,
@@ -1071,7 +1072,7 @@ const HomePage: React.FC = () => {
                   mx: 'auto',
                   mb: 4
                 }}>
-                  <EmojiEvents sx={{ fontSize: 50, color: '#F57C00' }} />
+                  <WorkspacePremium sx={{ fontSize: 50, color: '#D32F2F' }} />
                 </Box>
                 <Typography variant="h4" gutterBottom sx={{ fontWeight: 600, color: '#1B5E20', mb: 3 }}>
                   Championnat
@@ -1083,7 +1084,7 @@ const HomePage: React.FC = () => {
                   variant="contained" 
                   size="large"
                   sx={{
-                    bgcolor: '#F57C00',
+                    bgcolor: '#D32F2F',
                     color: 'white',
                     px: 4,
                     py: 1.5,
@@ -1091,11 +1092,11 @@ const HomePage: React.FC = () => {
                     fontWeight: 600,
                     textTransform: 'none',
                     fontSize: '1.1rem',
-                    boxShadow: '0 8px 25px rgba(245, 124, 0, 0.3)',
+                    boxShadow: '0 8px 25px rgba(211, 47, 47, 0.3)',
                     '&:hover': {
-                      bgcolor: '#EF6C00',
+                      bgcolor: '#C62828',
                       transform: 'translateY(-2px)',
-                      boxShadow: '0 12px 35px rgba(245, 124, 0, 0.4)'
+                      boxShadow: '0 12px 35px rgba(211, 47, 47, 0.4)'
                     },
                     transition: 'all 0.3s ease'
                   }}
