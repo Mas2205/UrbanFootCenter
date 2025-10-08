@@ -29,7 +29,8 @@ import {
   ExitToApp,
   Dashboard,
   Person,
-  Login
+  Login,
+  Group
 } from '@mui/icons-material';
 // Importer depuis le fichier index.ts des contexts qui exporte tous les contexts
 import { useAuth } from '../../contexts';
@@ -126,10 +127,20 @@ const Navbar: React.FC = () => {
                 <ListItemText primary="Administration" />
               </ListItem>
             ) : (
-              <ListItem component={Link} to="/reservations">
-                <ListItemIcon><EventNote /></ListItemIcon>
-                <ListItemText primary={t('nav.reservations')} />
-              </ListItem>
+              <>
+                <ListItem component={Link} to="/reservations">
+                  <ListItemIcon><EventNote /></ListItemIcon>
+                  <ListItemText primary={t('nav.reservations')} />
+                </ListItem>
+                <ListItem component={Link} to="/mon-equipe">
+                  <ListItemIcon><Group /></ListItemIcon>
+                  <ListItemText primary="Mon Équipe" />
+                </ListItem>
+                <ListItem component={Link} to="/tournois">
+                  <ListItemIcon><SportsSoccer /></ListItemIcon>
+                  <ListItemText primary="Tournois" />
+                </ListItem>
+              </>
             )}
             <ListItem component={Link} to="/profile">
               <ListItemIcon><Person /></ListItemIcon>
@@ -202,9 +213,17 @@ const Navbar: React.FC = () => {
                   Administration
                 </Button>
               ) : user && user.role === 'client' ? (
-                <Button color="inherit" component={Link} to="/reservations">
-                  {t('nav.reservations')}
-                </Button>
+                <>
+                  <Button color="inherit" component={Link} to="/reservations">
+                    {t('nav.reservations')}
+                  </Button>
+                  <Button color="inherit" component={Link} to="/mon-equipe">
+                    Mon Équipe
+                  </Button>
+                  <Button color="inherit" component={Link} to="/tournois">
+                    Tournois
+                  </Button>
+                </>
               ) : null}
             </>
           )}

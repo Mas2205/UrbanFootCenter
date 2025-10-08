@@ -95,9 +95,22 @@ exports.searchFields = async (req, res) => {
 // Récupérer tous les terrains
 exports.getAllFields = async (req, res) => {
   try {
+    console.log('🔍 getAllFields - User role:', req.user?.role, 'User ID:', req.user?.id);
+    
+    let whereClause = {};
+    
+    // Si c'est un admin de terrain, ne montrer que son terrain
+    if (req.user?.role === 'admin' && req.user?.field_id) {
+      whereClause.id = req.user.field_id;
+      console.log('🔍 Admin terrain - Filtrage par field_id:', req.user.field_id);
+    }
+    
     const fields = await Field.findAll({
+      where: whereClause,
       attributes: ['id', 'name', 'description', 'size', 'surface_type', 'price_per_hour', 'image_url', 'is_active', 'location', 'city']
     });
+
+    console.log('✅ Terrains trouvés:', fields.length);
 
     res.status(200).json({
       success: true,

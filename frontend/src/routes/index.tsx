@@ -23,6 +23,8 @@ const FieldsList = React.lazy(() => import('../components/fields/FieldsList'));
 const FieldDetails = React.lazy(() => import('../components/fields/FieldDetails'));
 const BookingPage = React.lazy(() => import('../components/reservations/BookingPage'));
 const ReservationsList = React.lazy(() => import('../components/reservations/ReservationsList'));
+const DemandeEquipePage = React.lazy(() => import('../components/client/DemandeEquipePage'));
+const TournoisPage = React.lazy(() => import('../pages/client/TournoisPage'));
 // Utiliser le nouveau tableau de bord administrateur
 const AdminDashboard = React.lazy(() => import('../components/admin/NewAdminDashboard'));
 const EmployeeDashboard = React.lazy(() => import('../components/employee/EmployeeDashboard'));
@@ -94,6 +96,20 @@ const AppRoutes: React.FC = () => {
           <Route path="/reservations" element={
             <React.Suspense fallback={<LazyLoading />}>
               <ReservationsList />
+            </React.Suspense>
+          } />
+          
+          {/* Route pour la demande d'équipe (clients uniquement) */}
+          <Route path="/mon-equipe" element={
+            <React.Suspense fallback={<LazyLoading />}>
+              <DemandeEquipePage />
+            </React.Suspense>
+          } />
+          
+          {/* Route pour les tournois (clients uniquement) */}
+          <Route path="/tournois" element={
+            <React.Suspense fallback={<LazyLoading />}>
+              <TournoisPage />
             </React.Suspense>
           } />
         </Route>

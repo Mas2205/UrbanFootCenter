@@ -43,7 +43,10 @@ import {
   LockReset,
   PersonAdd,
   Work,
-  Home
+  Home,
+  Groups as GroupsIcon,
+  EmojiEvents as TrophyIcon,
+  WorkspacePremium as ChampionshipIcon
 } from '@mui/icons-material';
 
 // Largeur du drawer
@@ -95,6 +98,9 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     { text: t('admin.dashboard', 'Tableau de bord'), path: '/admin', icon: <DashboardIcon /> },
     { text: 'Mon Terrain', path: '/admin/my-field', icon: <SportsSoccer /> },
     { text: t('admin.reservationsNav', 'Réservations'), path: '/admin/reservations', icon: <EventNote /> },
+    { text: 'Équipes', path: '/admin/equipes', icon: <GroupsIcon /> },
+    { text: 'Tournois', path: '/admin/tournois', icon: <TrophyIcon /> },
+    { text: 'Championnats', path: '/admin/championnats', icon: <ChampionshipIcon /> },
     { text: 'Employés', path: '/admin/employees', icon: <People /> },
     { text: 'Statistiques', path: '/admin/stats', icon: <Assessment /> },
     { text: 'Gestion des disponibilités', path: '/admin/availability', icon: <Schedule /> },
@@ -105,6 +111,9 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     { text: t('admin.dashboard', 'Tableau de bord'), path: '/admin', icon: <DashboardIcon /> },
     { text: t('admin.fields.section', 'Terrains'), path: '/admin/fields', icon: <SportsSoccer /> },
     { text: t('admin.reservationsNav', 'Réservations'), path: '/admin/reservations', icon: <EventNote /> },
+    { text: 'Équipes', path: '/admin/equipes', icon: <GroupsIcon /> },
+    { text: 'Tournois', path: '/admin/tournois', icon: <TrophyIcon /> },
+    { text: 'Championnats', path: '/admin/championnats', icon: <ChampionshipIcon /> },
     { text: t('admin.users', 'Utilisateurs'), path: '/admin/users', icon: <People /> },
     { text: t('admin.reports', 'Rapports'), path: '/admin/reports', icon: <Assessment /> },
   ];

@@ -8,9 +8,9 @@ const { upload } = require('../config/storage');
 /**
  * @route GET /api/fields
  * @desc Récupérer tous les terrains
- * @access Public
+ * @access Public/Private (filtré selon le rôle si authentifié)
  */
-router.get('/', asyncHandler(fieldController.getAllFields));
+router.get('/', authMiddleware, asyncHandler(fieldController.getAllFields));
 
 /**
  * @route GET /api/fields/cities

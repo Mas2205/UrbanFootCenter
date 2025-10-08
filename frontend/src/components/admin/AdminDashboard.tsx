@@ -34,7 +34,10 @@ import {
   Notifications,
   Assessment,
   Schedule,
-  Menu as MenuIcon
+  Menu as MenuIcon,
+  Groups as GroupsIcon,
+  EmojiEvents as TrophyIcon,
+  WorkspacePremium as ChampionshipIcon
 } from '@mui/icons-material';
 
 import AdminFields from './fields/AdminFields';
@@ -48,6 +51,9 @@ import AdminPayments from './payments/AdminPayments';
 import AdminReports from './reports/AdminReports';
 import AdminNotifications from './notifications/AdminNotifications';
 import AdminTimeSlots from './timeslots/AdminTimeSlots';
+import EquipesPage from './equipes/EquipesPage';
+import TournoisPage from './tournois/TournoisPage';
+import ChampionnatsPage from './championnats/ChampionnatsPage';
 import { useAuth } from '../../contexts';
 
 // Largeur du drawer
@@ -94,6 +100,13 @@ const AdminDashboard: React.FC = () => {
     { text: t('admin.notifications'), path: '/admin/notifications', icon: <Notifications /> },
   ];
 
+  // Items du menu sportifs (visibles pour tous les admins)
+  const sportsMenuItems = [
+    { text: '🏆 Équipes', path: '/admin/equipes', icon: <GroupsIcon /> },
+    { text: '🥇 Tournois', path: '/admin/tournois', icon: <TrophyIcon /> },
+    { text: '👑 Championnats', path: '/admin/championnats', icon: <ChampionshipIcon /> },
+  ];
+
   // Items du menu spécifiques au super admin
   const superAdminMenuItems = [
     { text: t('admin.timeSlots'), path: '/admin/timeslots', icon: <Schedule /> },
@@ -104,8 +117,8 @@ const AdminDashboard: React.FC = () => {
 
   // Combiner les menus selon le rôle
   const menuItems = user.role === 'super_admin'
-    ? [...commonMenuItems, ...superAdminMenuItems, settingsMenuItem]
-    : [...commonMenuItems, settingsMenuItem];
+    ? [...commonMenuItems, ...sportsMenuItems, ...superAdminMenuItems, settingsMenuItem]
+    : [...commonMenuItems, ...sportsMenuItems, settingsMenuItem];
   
   
   // Obtenir le nom de la page actuelle pour le breadcrumb
@@ -295,6 +308,9 @@ const AdminDashboard: React.FC = () => {
           <Route path="/fields/create" element={<AdminFieldCreate />} />
           <Route path="/fields/edit/:id" element={<AdminFieldEdit />} />
           <Route path="/reservations" element={<AdminReservations />} />
+          <Route path="/equipes" element={<EquipesPage />} />
+          <Route path="/tournois" element={<TournoisPage />} />
+          <Route path="/championnats" element={<ChampionnatsPage />} />
           <Route path="/users" element={<AdminUsers />} />
           <Route path="/settings" element={<AdminSettings />} />
           

@@ -7,6 +7,7 @@ import reservationAPI from './reservationAPI';
 import adminAPI from './adminAPI';
 import settingsAPI from './settingsAPI';
 import paymentAPI from './paymentAPI';
+import demandeEquipeAPI from './demandeEquipeAPI';
 import { API } from './types';
 
 // Alias pour la compatibilité avec le code existant
@@ -21,7 +22,8 @@ const api = {
   reservation: reservationAPI,
   admin: adminAPI,
   settings: settingsAPI,
-  payment: paymentAPI
+  payment: paymentAPI,
+  demandeEquipe: demandeEquipeAPI
 } as unknown as API;
 
 // Exports individuels pour les imports nommés
@@ -32,6 +34,7 @@ export {
   adminAPI,
   settingsAPI,
   paymentAPI,
+  demandeEquipeAPI,
   authAPI // Pour le code qui utilise déjà authAPI
 };
 

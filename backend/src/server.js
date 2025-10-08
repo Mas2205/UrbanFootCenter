@@ -27,6 +27,9 @@ const {
 // Import de la configuration de base de données
 const { sequelize } = require('./config/database');
 
+// Import du planificateur de championnats
+const ChampionnatScheduler = require('./utils/championnatScheduler');
+
 // Import des modèles pour créer des données de test
 const { User, Field, TimeSlot } = require('./models');
 
@@ -275,14 +278,18 @@ if (process.env.NODE_ENV !== 'test') {
         console.log('Synchronisation des modèles avec la base de données (développement)...');
         return sequelize.authenticate().then(() => {
           console.log('✅ Synchronisation terminée avec succès - Tables créées');
+        }).then(() => {
+          console.log('✅ Synchronisation terminée avec succès - Tables créées');
           
-          // Créer des données de test si les tables sont vides
+          // Initialiser le planificateur de championnats (temporairement désactivé)
+          // ChampionnatScheduler.init();
+          console.log('⚠️ Planificateur de championnats temporairement désactivé');
+          
           return createSampleData();
         }).catch(err => {
           console.error('❌ Erreur lors de la synchronisation:', err);
         });
       } else {
-        console.log('⚠️  Synchronisation désactivée en production pour éviter les conflits de vue');
         console.log('ℹ️  Utilisez /api/admin-setup/fix-view-conflict pour corriger manuellement');
         
         // En production, juste créer les données de test si nécessaire

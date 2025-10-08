@@ -57,6 +57,31 @@ try {
   console.log('⚠️  payment_method.routes.js non trouvé, ignoré');
 }
 
+// === NOUVELLES ROUTES ÉQUIPES/TOURNOIS/CHAMPIONNATS ===
+try {
+  router.use('/equipes', require('./equipe.routes'));
+} catch (e) {
+  console.log('⚠️  equipe.routes.js non trouvé, ignoré');
+}
+
+try {
+  router.use('/demandes-equipes', require('./demandeEquipe.routes'));
+} catch (e) {
+  console.log('⚠️  demandeEquipe.routes.js non trouvé, ignoré');
+}
+
+try {
+  router.use('/tournois', require('./tournoi.routes'));
+} catch (e) {
+  console.log('⚠️  tournoi.routes.js non trouvé, ignoré');
+}
+
+try {
+  router.use('/championnats', require('./championnat.routes'));
+} catch (e) {
+  console.log('⚠️  championnat.routes.js non trouvé, ignoré');
+}
+
 // Réponse temporaire pour les routes non implémentées
 const notImplemented = (req, res) => {
   res.status(501).json({ 

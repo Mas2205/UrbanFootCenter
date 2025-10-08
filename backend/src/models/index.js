@@ -40,17 +40,27 @@ db.Payment = require('./payment.model')(sequelize, DataTypes, defaultOptions);
 db.PromoCode = require('./promo_code.model')(sequelize, DataTypes, defaultOptions);
 db.Team = require('./team.model')(sequelize, DataTypes, defaultOptions);
 db.TeamMember = require('./team_member.model')(sequelize, DataTypes, defaultOptions);
-db.Notification = require('./notification.model')(sequelize, DataTypes, defaultOptions);
 db.SpecialEvent = require('./special_event.model')(sequelize, DataTypes, defaultOptions);
 db.HolidayAndClosure = require('./holiday_and_closure.model')(sequelize, DataTypes, defaultOptions);
 db.PaymentMethod = require('./payment_method.model')(sequelize, DataTypes, defaultOptions);
 db.Region = require('./region.model')(sequelize, DataTypes, defaultOptions);
 
+// === NOUVEAUX MODÈLES ÉQUIPES/TOURNOIS/CHAMPIONNATS ===
+// Modèles sportifs (appel des fonctions avec les paramètres Sequelize)
+
+db.Equipe = require('./equipe.model')(sequelize, DataTypes, defaultOptions);
+db.MembreEquipe = require('./membreEquipe.model')(sequelize, DataTypes, defaultOptions);
+db.Tournoi = require('./tournoi.model')(sequelize, DataTypes, defaultOptions);
+db.ParticipationTournoi = require('./participationTournoi.model')(sequelize, DataTypes, defaultOptions);
+db.MatchTournoi = require('./matchTournoi.model')(sequelize, DataTypes, defaultOptions);
+db.Championnat = require('./championnat.model')(sequelize, DataTypes, defaultOptions);
+db.MatchChampionnat = require('./matchChampionnat.model')(sequelize, DataTypes, defaultOptions);
+db.ClassementChampionnat = require('./classementChampionnat.model')(sequelize, DataTypes, defaultOptions);
+
 // Définition des associations
 // Utilisateur <-> Réservation
 db.User.hasMany(db.Reservation, { foreignKey: 'user_id', as: 'reservations' });
 db.Reservation.belongsTo(db.User, { foreignKey: 'user_id', as: 'user' });
-
 // Terrain <-> Réservation
 db.Field.hasMany(db.Reservation, { foreignKey: 'field_id', as: 'reservations' });
 db.Reservation.belongsTo(db.Field, { foreignKey: 'field_id', as: 'field' });
@@ -96,5 +106,11 @@ db.Payout.belongsTo(db.MarketplacePayment, { foreignKey: 'marketplace_payment_id
 db.Field.hasMany(db.Payout, { foreignKey: 'field_id', as: 'payouts' });
 db.Payout.belongsTo(db.Field, { foreignKey: 'field_id', as: 'field' });
 db.PaymentMethod.belongsTo(db.Field, { foreignKey: 'field_id', as: 'field' });
+
+// === ASSOCIATIONS ÉQUIPES/TOURNOIS/CHAMPIONNATS ===
+// Configuration des associations
+const setupAssociations = require('./associations');
+setupAssociations(db);
+console.log('✅ Associations sportives activées');
 
 module.exports = db;

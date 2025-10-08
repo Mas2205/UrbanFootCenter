@@ -29,6 +29,11 @@ import AdminFieldAvailability from './AdminFieldAvailability';
 import AdminFieldManagement from './AdminFieldManagement';
 import AdminPaymentMethods from './AdminPaymentMethods';
 
+// Import des pages sportives
+import EquipesPage from './equipes/EquipesPage';
+import TournoisPage from './tournois/TournoisPage';
+import ChampionnatsPage from './championnats/ChampionnatsPage';
+
 const NewAdminDashboard: React.FC = () => {
   const { user } = useAuth();
   const location = useLocation();
@@ -64,6 +69,11 @@ const NewAdminDashboard: React.FC = () => {
         <Route path="/reservations" element={<AdminReservations />} />
         <Route path="/users" element={<AdminUsers />} />
         <Route path="/settings" element={<AdminSettings />} />
+        
+        {/* Routes sportives (accessibles à tous les admins) */}
+        <Route path="/equipes" element={<EquipesPage />} />
+        <Route path="/tournois" element={<TournoisPage />} />
+        <Route path="/championnats" element={<ChampionnatsPage />} />
         
         {/* Routes pour les fonctionnalités */}
         <Route path="/reports" element={<AdminReports />} />

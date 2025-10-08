@@ -8,29 +8,80 @@ const JWT_SECRET = process.env.JWT_SECRET || (() => {
 })();
 
 /**
- * Middleware de vérification des rôles
- * Vérifie que l'utilisateur a un des rôles autorisés
+ * Middleware spécifique pour les équipes/tournois/championnats
+ * Gère les permissions selon les rôles et les terrains
  */
-exports.roleMiddleware = (allowedRoles) => {
-  return (req, res, next) => {
-    // L'utilisateur doit être authentifié (middleware authMiddleware appelé avant)
-    if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        message: 'Accès non autorisé. Authentification requise.'
-      });
-    }
+exports.sportsMiddleware = (action = 'read') => {
+  return async (req, res, next) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({
+          success: false,
+          message: 'Authentification requise.'
+        });
+      }
 
-    // Vérifier si l'utilisateur a un des rôles autorisés
-    if (!allowedRoles.includes(req.user.role)) {
+      const { role } = req.user;
+
+      // Super Admin : accès total
+      if (role === 'super_admin') {
+        return next();
+      }
+
+      // Admin Terrain : gestion de son terrain uniquement
+      if (role === 'admin') {
+        if (action === 'read') {
+          return next(); // Peut consulter
+        }
+        
+        // Pour les actions de modification, vérifier le terrain
+        const terrainId = req.body.terrain_id || req.params.terrain_id;
+        if (terrainId && req.user.field_id && terrainId === req.user.field_id) {
+          return next();
+        }
+        
+        return res.status(403).json({
+          success: false,
+          message: 'Vous ne pouvez gérer que les éléments de votre terrain.'
+        });
+      }
+
+      // Capitaine : inscription tournois et consultation
+      if (role === 'client') {
+        if (action === 'read' || action === 'participate') {
+          return next();
+        }
+        
+        return res.status(403).json({
+          success: false,
+          message: 'Accès limité à la consultation et participation.'
+        });
+      }
+
+      // Employé : consultation uniquement
+      if (role === 'employee') {
+        if (action === 'read') {
+          return next();
+        }
+        
+        return res.status(403).json({
+          success: false,
+          message: 'Accès en lecture seule.'
+        });
+      }
+
       return res.status(403).json({
         success: false,
-        message: 'Accès interdit. Privilèges insuffisants.'
+        message: 'Accès refusé.'
+      });
+
+    } catch (error) {
+      console.error('Erreur middleware sports:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Erreur interne du serveur.'
       });
     }
-
-    // Utilisateur a le bon rôle, continuer
-    next();
   };
 };
 
