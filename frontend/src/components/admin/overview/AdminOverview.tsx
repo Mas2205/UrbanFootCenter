@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import MigrationButton from '../MigrationButton';
 import {
   Box,
   Typography,
@@ -231,11 +232,13 @@ const AdminOverview: React.FC = () => {
   }
 
   return (
-    <Box>
-      {/* Titre */}
-      <Typography variant="h5" gutterBottom>
-        {t('admin.dashboardOverview')}
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h4" gutterBottom>
+        {t('admin.dashboard')}
       </Typography>
+      
+      {/* Bouton temporaire de migration */}
+      <MigrationButton />
       
       {/* Message d'erreur */}
       {error && (

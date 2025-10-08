@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Routes, Route, Link as RouterLink, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import MigrationButton from './MigrationButton';
 import {
   Box,
   Typography,
