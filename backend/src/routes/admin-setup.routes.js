@@ -941,6 +941,60 @@ router.get('/fix-tables-columns', async (req, res) => {
         WHERE joined_at IS NULL AND date_adhesion IS NOT NULL;
       `);
       
+      // Ajouter colonnes manquantes à fields
+      console.log('🔧 Ajout colonnes manquantes à fields...');
+      
+      await client.query(`
+        ALTER TABLE fields 
+        ADD COLUMN IF NOT EXISTS equipment_fee DECIMAL(10,2) DEFAULT 0;
+      `);
+      
+      await client.query(`
+        ALTER TABLE fields 
+        ADD COLUMN IF NOT EXISTS owner_payout_channel VARCHAR(50);
+      `);
+      
+      await client.query(`
+        ALTER TABLE fields 
+        ADD COLUMN IF NOT EXISTS owner_mobile_e164 VARCHAR(20);
+      `);
+      
+      await client.query(`
+        ALTER TABLE fields 
+        ADD COLUMN IF NOT EXISTS owner_bank_info JSONB;
+      `);
+      
+      await client.query(`
+        ALTER TABLE fields 
+        ADD COLUMN IF NOT EXISTS commission_rate_bps INTEGER DEFAULT 1000;
+      `);
+      
+      await client.query(`
+        ALTER TABLE fields 
+        ADD COLUMN IF NOT EXISTS indoor BOOLEAN DEFAULT false;
+      `);
+      
+      // Mettre à jour les valeurs par défaut pour fields
+      console.log('🔧 Mise à jour valeurs par défaut fields...');
+      
+      await client.query(`
+        UPDATE fields 
+        SET equipment_fee = 0 
+        WHERE equipment_fee IS NULL;
+      `);
+      
+      await client.query(`
+        UPDATE fields 
+        SET commission_rate_bps = 1000 
+        WHERE commission_rate_bps IS NULL;
+      `);
+      
+      await client.query(`
+        UPDATE fields 
+        SET indoor = false 
+        WHERE indoor IS NULL;
+      `);
+      
       console.log('✅ Toutes les colonnes corrigées avec succès');
       
     } finally {
@@ -980,7 +1034,17 @@ router.get('/fix-tables-columns', async (req, res) => {
           <li><code>added_by</code> - Ajouté par</li>
         </ul>
         
-        <p>✅ Valeurs par défaut définies</p>
+        <p>✅ Colonnes ajoutées à la table <code>fields</code> :</p>
+        <ul>
+          <li><code>equipment_fee</code> - Frais équipement</li>
+          <li><code>owner_payout_channel</code> - Canal de paiement propriétaire</li>
+          <li><code>owner_mobile_e164</code> - Mobile propriétaire</li>
+          <li><code>owner_bank_info</code> - Infos bancaires</li>
+          <li><code>commission_rate_bps</code> - Taux de commission</li>
+          <li><code>indoor</code> - Terrain couvert</li>
+        </ul>
+        
+        <p>✅ Valeurs par défaut définies pour toutes les tables</p>
         
         <p><a href="https://urban-foot-center.vercel.app/admin" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">← Retour au tableau de bord admin</a></p>
       </body>
