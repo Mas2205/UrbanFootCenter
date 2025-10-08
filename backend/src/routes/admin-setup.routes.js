@@ -491,7 +491,7 @@ router.get('/create-sports-tables', async (req, res) => {
   try {
     console.log('🚀 === CRÉATION TABLES SYSTÈME SPORTIF (GET) ===');
     
-    const { createSportsTables } = require('../../scripts/create-sports-tables-production');
+    const { createSportsTables } = require('../../../scripts/create-sports-tables-production');
     await createSportsTables();
     
     res.send(`
@@ -577,7 +577,7 @@ router.post('/create-sports-tables', async (req, res) => {
   try {
     console.log('🚀 === CRÉATION TABLES SYSTÈME SPORTIF ===');
     
-    const { createSportsTables } = require('../../scripts/create-sports-tables-production');
+    const { createSportsTables } = require('../../../scripts/create-sports-tables-production');
     await createSportsTables();
     
     res.json({
