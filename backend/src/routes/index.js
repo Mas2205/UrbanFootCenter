@@ -23,6 +23,7 @@ router.use('/reservations', require('./reservation_with_payment.routes'));
 router.use('/payments', require('./payment.routes'));
 router.use('/stats', require('./stats.routes'));
 router.use('/availability', require('./availability.routes'));
+router.use('/reports', require('./reports.routes'));
 
 // Route temporaire pour setup production
 router.use('/admin-setup', require('./admin-setup.routes'));

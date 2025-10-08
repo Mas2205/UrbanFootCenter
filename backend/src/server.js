@@ -273,7 +273,7 @@ if (process.env.NODE_ENV !== 'test') {
       // Synchronisation conditionnelle pour éviter les conflits de vue en production
       if (process.env.NODE_ENV !== 'production') {
         console.log('Synchronisation des modèles avec la base de données (développement)...');
-        return sequelize.sync({ force: false, alter: true }).then(() => {
+        return sequelize.authenticate().then(() => {
           console.log('✅ Synchronisation terminée avec succès - Tables créées');
           
           // Créer des données de test si les tables sont vides

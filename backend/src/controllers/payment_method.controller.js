@@ -79,7 +79,22 @@ exports.createPaymentMethod = async (req, res) => {
       });
     }
 
-    const { field_id, payment_type, api_url, api_key, api_secret, merchant_id, is_active, configuration, ignore_validation } = req.body;
+    const { 
+      field_id, 
+      payment_type, 
+      api_url, 
+      api_key, 
+      api_secret, 
+      merchant_id, 
+      is_active, 
+      configuration, 
+      ignore_validation,
+      // Nouveaux champs pour marketplace
+      mode,
+      owner_payout_channel,
+      owner_mobile_e164,
+      commission_rate_bps
+    } = req.body;
 
     // Déterminer le field_id à utiliser
     let targetFieldId;
@@ -112,8 +127,8 @@ exports.createPaymentMethod = async (req, res) => {
       });
     }
 
-    // Validation de l'URL - pas nécessaire pour les paiements en espèces
-    if (payment_type !== 'especes') {
+    // Validation de l'URL - pas nécessaire pour les paiements en espèces et marketplace
+    if (payment_type !== 'especes' && payment_type !== 'marketplace_digital') {
       const urlRegex = /^https?:\/\/.+/;
       if (!urlRegex.test(api_url)) {
         return res.status(400).json({
@@ -123,33 +138,87 @@ exports.createPaymentMethod = async (req, res) => {
       }
     }
 
-    const paymentMethod = await PaymentMethod.create({
-      field_id: targetFieldId,
-      payment_type,
-      api_url,
-      api_key,
-      api_secret,
-      merchant_id,
-      is_active: is_active !== undefined ? is_active : true,
-      configuration: configuration || {},
-      ignore_validation: ignore_validation || false
-    });
+    // Gérer les deux modes : traditionnel et marketplace
+    if (mode === 'marketplace' && payment_type === 'marketplace_digital') {
+      // Mode marketplace : mettre à jour le terrain avec les paramètres marketplace
+      const field = await Field.findByPk(targetFieldId);
+      if (!field) {
+        return res.status(404).json({
+          success: false,
+          message: 'Terrain non trouvé.'
+        });
+      }
 
-    const paymentMethodWithField = await PaymentMethod.findByPk(paymentMethod.id, {
-      include: [
-        {
-          model: Field,
-          as: 'field',
-          attributes: ['id', 'name']
-        }
-      ]
-    });
+      await field.update({
+        owner_payout_channel: owner_payout_channel || 'wave',
+        owner_mobile_e164: owner_mobile_e164,
+        commission_rate_bps: commission_rate_bps || 1000
+      });
 
-    res.status(201).json({
-      success: true,
-      message: 'Moyen de paiement créé avec succès',
-      data: paymentMethodWithField
-    });
+      // Créer un enregistrement PaymentMethod pour le marketplace
+      const paymentMethod = await PaymentMethod.create({
+        field_id: targetFieldId,
+        payment_type: 'marketplace_digital',
+        api_url: 'marketplace://paydunya-wave',
+        api_key: 'marketplace_configured',
+        api_secret: null,
+        merchant_id: 'marketplace',
+        is_active: true,
+        configuration: {
+          mode: 'marketplace',
+          owner_payout_channel: owner_payout_channel || 'wave',
+          owner_mobile_e164: owner_mobile_e164,
+          commission_rate_bps: commission_rate_bps || 1000
+        },
+        ignore_validation: true
+      });
+
+      const paymentMethodWithField = await PaymentMethod.findByPk(paymentMethod.id, {
+        include: [
+          {
+            model: Field,
+            as: 'field',
+            attributes: ['id', 'name', 'owner_payout_channel', 'owner_mobile_e164', 'commission_rate_bps']
+          }
+        ]
+      });
+
+      return res.status(201).json({
+        success: true,
+        message: 'Marketplace digital configuré avec succès',
+        data: paymentMethodWithField
+      });
+    } else {
+      // Mode traditionnel
+      const paymentMethod = await PaymentMethod.create({
+        field_id: targetFieldId,
+        payment_type,
+        api_url,
+        api_key,
+        api_secret,
+        merchant_id,
+        is_active: is_active !== undefined ? is_active : true,
+        configuration: configuration || {},
+        ignore_validation: ignore_validation || false
+      });
+
+      const paymentMethodWithField = await PaymentMethod.findByPk(paymentMethod.id, {
+        include: [
+          {
+            model: Field,
+            as: 'field',
+            attributes: ['id', 'name']
+          }
+        ]
+      });
+
+      return res.status(201).json({
+        success: true,
+        message: 'Moyen de paiement créé avec succès',
+        data: paymentMethodWithField
+      });
+    }
+
   } catch (error) {
     console.error('Erreur lors de la création du moyen de paiement:', error);
     res.status(500).json({
@@ -219,8 +288,8 @@ exports.updatePaymentMethod = async (req, res) => {
       }
     }
 
-    // Validation de l'URL si elle est fournie - pas nécessaire pour les paiements en espèces
-    if (api_url !== undefined && payment_type !== 'especes') {
+    // Validation de l'URL si elle est fournie - pas nécessaire pour les paiements en espèces et marketplace
+    if (api_url !== undefined && payment_type !== 'especes' && payment_type !== 'marketplace_digital') {
       const urlRegex = /^https?:\/\/.+/;
       if (!urlRegex.test(api_url)) {
         return res.status(400).json({

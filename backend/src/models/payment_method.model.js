@@ -18,10 +18,10 @@ module.exports = (sequelize) => {
       }
     },
     payment_type: {
-      type: DataTypes.ENUM('wave', 'orange_money', 'carte_bancaire', 'especes'),
+      type: DataTypes.ENUM('wave', 'orange_money', 'carte_bancaire', 'especes', 'marketplace_digital'),
       allowNull: false,
       validate: {
-        isIn: [['wave', 'orange_money', 'carte_bancaire', 'especes']]
+        isIn: [['wave', 'orange_money', 'carte_bancaire', 'especes', 'marketplace_digital']]
       }
     },
     api_url: {
@@ -29,8 +29,8 @@ module.exports = (sequelize) => {
       allowNull: true,
       validate: {
         customValidator(value) {
-          // Pour les paiements en espèces, l'URL n'est pas requise
-          if (this.payment_type === 'especes') {
+          // Pour les paiements en espèces et marketplace, l'URL n'est pas requise
+          if (this.payment_type === 'especes' || this.payment_type === 'marketplace_digital') {
             return true;
           }
           // Pour les autres types, l'URL est requise et doit être valide
@@ -49,8 +49,8 @@ module.exports = (sequelize) => {
       allowNull: true,
       validate: {
         customValidator(value) {
-          // Pour les paiements en espèces, la clé API n'est pas requise
-          if (this.payment_type === 'especes') {
+          // Pour les paiements en espèces et marketplace, la clé API n'est pas requise
+          if (this.payment_type === 'especes' || this.payment_type === 'marketplace_digital') {
             return true;
           }
           // Pour les autres types (sauf Wave), la clé API est requise

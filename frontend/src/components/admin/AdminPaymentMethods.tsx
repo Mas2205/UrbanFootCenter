@@ -51,7 +51,7 @@ import { useAuth } from '../../contexts/AuthContext';
 interface PaymentMethod {
   id: string;
   field_id: string;
-  payment_type: 'wave' | 'orange_money' | 'carte_bancaire' | 'especes';
+  payment_type: 'wave' | 'orange_money' | 'carte_bancaire' | 'especes' | 'marketplace_digital';
   api_url: string;
   api_key: string;
   api_secret?: string;
@@ -69,7 +69,7 @@ interface PaymentMethod {
 
 interface PaymentMethodForm {
   field_id: string;
-  payment_type: 'wave' | 'orange_money' | 'carte_bancaire' | 'especes' | '';
+  payment_type: 'wave' | 'orange_money' | 'carte_bancaire' | 'especes' | 'marketplace_digital' | '';
   api_url: string;
   api_key: string;
   api_secret: string;
@@ -221,14 +221,20 @@ function AdminPaymentMethods() {
       const submitData = {
         field_id: formData.field_id || undefined,
         payment_type: formData.payment_type,
-        api_url: formData.payment_type === 'especes' ? 'cash_payment' : formData.api_url,
+        api_url: formData.payment_type === 'especes' ? 'cash_payment' : 
+                 formData.payment_type === 'marketplace_digital' ? 'marketplace://paydunya-wave' :
+                 formData.api_url,
         api_key: formData.payment_type === 'wave' ? 'wave_redirect' : 
-                 formData.payment_type === 'especes' ? 'cash_payment' : formData.api_key,
-        api_secret: (formData.payment_type === 'wave' || formData.payment_type === 'especes') ? undefined : (formData.api_secret || undefined),
-        merchant_id: (formData.payment_type === 'wave' || formData.payment_type === 'especes') ? undefined : (formData.merchant_id || undefined),
+                 formData.payment_type === 'especes' ? 'cash_payment' :
+                 formData.payment_type === 'marketplace_digital' ? 'marketplace_configured' :
+                 formData.api_key,
+        api_secret: (formData.payment_type === 'wave' || formData.payment_type === 'especes' || formData.payment_type === 'marketplace_digital') ? undefined : (formData.api_secret || undefined),
+        merchant_id: (formData.payment_type === 'wave' || formData.payment_type === 'especes' || formData.payment_type === 'marketplace_digital') ? 'marketplace' : (formData.merchant_id || undefined),
         is_active: formData.is_active,
         ignore_validation: formData.ignore_validation,
-        configuration: configurationObj
+        configuration: configurationObj,
+        // Champs spécifiques marketplace
+        mode: formData.payment_type === 'marketplace_digital' ? 'marketplace' : 'traditional'
       };
 
       let response;
@@ -298,6 +304,7 @@ function AdminPaymentMethods() {
       case 'orange_money': return 'Orange Money';
       case 'carte_bancaire': return 'Carte Bancaire';
       case 'especes': return 'Espèces';
+      case 'marketplace_digital': return '🚀 Marketplace Digital';
       default: return type;
     }
   };
@@ -308,6 +315,7 @@ function AdminPaymentMethods() {
       case 'orange_money': return '#FF8C00';
       case 'carte_bancaire': return '#1976D2';
       case 'especes': return '#4CAF50';
+      case 'marketplace_digital': return '#9C27B0';
       default: return '#757575';
     }
   };
@@ -483,11 +491,14 @@ function AdminPaymentMethods() {
                   <MenuItem value="orange_money">Orange Money</MenuItem>
                   <MenuItem value="carte_bancaire">Carte Bancaire</MenuItem>
                   <MenuItem value="especes">Espèces</MenuItem>
+                  <MenuItem value="marketplace_digital">
+                    🚀 Marketplace Digital (Multi-canaux + Commission auto)
+                  </MenuItem>
                 </Select>
               </FormControl>
 
-              {/* URL API - Masqué pour les paiements en espèces */}
-              {formData.payment_type !== 'especes' && (
+              {/* URL API - Masqué pour les paiements en espèces et marketplace */}
+              {formData.payment_type !== 'especes' && formData.payment_type !== 'marketplace_digital' && (
                 <TextField
                   fullWidth
                   label={formData.payment_type === 'wave' ? 'URL de redirection Wave' : "URL de l'API"}
@@ -511,8 +522,8 @@ function AdminPaymentMethods() {
                 />
               )}
 
-              {/* Clé API - Masqué pour Wave et Espèces */}
-              {formData.payment_type !== 'wave' && formData.payment_type !== 'especes' && (
+              {/* Clé API - Masqué pour Wave, Espèces et Marketplace */}
+              {formData.payment_type !== 'wave' && formData.payment_type !== 'especes' && formData.payment_type !== 'marketplace_digital' && (
                 <TextField
                   fullWidth
                   label="Clé API"
@@ -527,8 +538,8 @@ function AdminPaymentMethods() {
                 />
               )}
 
-              {/* Secret API - Masqué pour Wave et Espèces */}
-              {formData.payment_type !== 'wave' && formData.payment_type !== 'especes' && (
+              {/* Secret API - Masqué pour Wave, Espèces et Marketplace */}
+              {formData.payment_type !== 'wave' && formData.payment_type !== 'especes' && formData.payment_type !== 'marketplace_digital' && (
                 <TextField
                   fullWidth
                   label="Secret API (optionnel)"
@@ -542,8 +553,8 @@ function AdminPaymentMethods() {
                 />
               )}
 
-              {/* Merchant ID - Masqué pour Wave et Espèces */}
-              {formData.payment_type !== 'wave' && formData.payment_type !== 'especes' && (
+              {/* Merchant ID - Masqué pour Wave, Espèces et Marketplace */}
+              {formData.payment_type !== 'wave' && formData.payment_type !== 'especes' && formData.payment_type !== 'marketplace_digital' && (
                 <TextField
                   fullWidth
                   label="Merchant ID (optionnel)"
@@ -552,6 +563,33 @@ function AdminPaymentMethods() {
                   onChange={handleInputChange}
                   placeholder="merchant_12345"
                 />
+              )}
+
+              {/* Champs spécifiques au Marketplace Digital */}
+              {formData.payment_type === 'marketplace_digital' && (
+                <Box sx={{ p: 3, bgcolor: 'primary.50', borderRadius: 2, border: '1px solid', borderColor: 'primary.200' }}>
+                  <Typography variant="h6" sx={{ mb: 2, color: 'primary.main' }}>
+                    🚀 Configuration Marketplace Digital
+                  </Typography>
+                  <Typography variant="body2" sx={{ mb: 3, color: 'text.secondary' }}>
+                    Le marketplace digital permet d'accepter les paiements Wave, Orange Money et cartes bancaires 
+                    avec commission automatique et versement instantané.
+                  </Typography>
+                  
+                  <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                    <Chip label="Wave" color="primary" size="small" />
+                    <Chip label="Orange Money" sx={{ bgcolor: '#FF8C00', color: 'white' }} size="small" />
+                    <Chip label="Cartes" color="info" size="small" />
+                  </Box>
+
+                  <Alert severity="info" sx={{ mt: 2 }}>
+                    <Typography variant="body2">
+                      <strong>Configuration automatique :</strong> Le marketplace digital utilise PayDunya et Wave 
+                      pour gérer les paiements. La commission de 10% est prélevée automatiquement et 90% 
+                      vous est versé instantanément.
+                    </Typography>
+                  </Alert>
+                </Box>
               )}
 
               {/* Configuration JSON - Adaptée selon le type */}
@@ -568,6 +606,8 @@ function AdminPaymentMethods() {
                     ? '{"currency": "XOF", "callback_url": "https://votre-site.com/callback"}'
                     : formData.payment_type === 'especes'
                     ? '{"currency": "XOF", "description": "Paiement en espèces au terrain"}'
+                    : formData.payment_type === 'marketplace_digital'
+                    ? '{"commission_rate": 10, "payout_channel": "wave", "mobile": "+221771234567"}'
                     : '{"timeout": 30, "currency": "XOF"}'
                 }
                 helperText={
@@ -575,6 +615,8 @@ function AdminPaymentMethods() {
                     ? 'Configuration Wave : currency (devise) et callback_url (URL de retour après paiement)'
                     : formData.payment_type === 'especes'
                     ? 'Configuration pour les paiements en espèces : currency (devise) et description'
+                    : formData.payment_type === 'marketplace_digital'
+                    ? 'Configuration marketplace : commission_rate (%), payout_channel (wave/orange_money) et mobile (+221xxxxxxxxx)'
                     : 'Configuration supplémentaire au format JSON'
                 }
               />
