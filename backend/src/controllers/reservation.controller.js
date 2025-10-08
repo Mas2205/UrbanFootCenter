@@ -353,33 +353,67 @@ exports.getUserReservations = async (req, res) => {
     // Ajouter le filtre de statut si nécessaire
     if (status && status !== 'all') {
       console.log('🔍 Entrée dans le filtrage de statut');
+      const now = new Date();
+      const currentDate = now.toISOString().split('T')[0]; // Format YYYY-MM-DD
+      const currentTime = now.toTimeString().split(' ')[0]; // Format HH:MM:SS
+      
+      console.log('🔍 Date actuelle:', currentDate, 'Heure actuelle:', currentTime);
+      
       // Pour les réservations à venir
       if (status === 'upcoming') {
         console.log('🔍 Filtrage upcoming');
-        const today = new Date();
-        today.setHours(0, 0, 0, 0); // Début de la journée
-        console.log('🔍 Date today:', today);
-        whereClause.reservation_date = {
-          [Op.gte]: today // Date >= aujourd'hui (début de journée)
-        };
-        whereClause.status = {
-          [Op.notIn]: ['cancelled'] // Non annulées
-        };
-        console.log('🔍 WhereClause après upcoming:', JSON.stringify(whereClause));
+        whereClause[Op.and] = [
+          {
+            [Op.or]: [
+              // Réservations futures (date > aujourd'hui)
+              {
+                reservation_date: {
+                  [Op.gt]: currentDate
+                }
+              },
+              // Réservations d'aujourd'hui avec heure de début future
+              {
+                [Op.and]: [
+                  { reservation_date: currentDate },
+                  { start_time: { [Op.gt]: currentTime } }
+                ]
+              }
+            ]
+          },
+          {
+            status: {
+              [Op.notIn]: ['cancelled'] // Non annulées
+            }
+          }
+        ];
       }
       // Pour les réservations passées
       else if (status === 'past') {
-        console.log('🔍 Filtrage past - DÉBUT');
-        const today = new Date();
-        today.setHours(0, 0, 0, 0); // Début de la journée
-        console.log('🔍 Date today pour past:', today);
-        whereClause.reservation_date = {
-          [Op.lt]: today // Date < aujourd'hui (début de journée)
-        };
-        whereClause.status = {
-          [Op.notIn]: ['cancelled'] // Non annulées
-        };
-        console.log('🔍 WhereClause après past:', JSON.stringify(whereClause));
+        console.log('🔍 Filtrage past');
+        whereClause[Op.and] = [
+          {
+            [Op.or]: [
+              // Réservations passées (date < aujourd'hui)
+              {
+                reservation_date: {
+                  [Op.lt]: currentDate
+                }
+              },
+              // Réservations d'aujourd'hui avec heure de fin passée
+              {
+                [Op.and]: [
+                  { reservation_date: currentDate },
+                  { end_time: { [Op.lt]: currentTime } }
+                ]
+              }
+            ]
+          },
+          {
+            status: {
+              [Op.notIn]: ['cancelled'] // Non annulées
+            }
+          }
+        ];
       }
       // Pour les réservations annulées
       else if (status === 'cancelled') {
@@ -389,10 +423,10 @@ exports.getUserReservations = async (req, res) => {
       // Pour tout autre statut spécifique
       else {
         console.log('🚨 Status non reconnu:', status);
-        console.log('🚨 Comparaison status === past:', status === 'past');
-        console.log('🚨 Type de status:', typeof status);
         whereClause.status = status;
       }
+      
+      console.log('🔍 WhereClause final:', JSON.stringify(whereClause, null, 2));
     }
     
     console.log('Where clause:', JSON.stringify(whereClause));
