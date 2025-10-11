@@ -24,7 +24,8 @@ import {
   LocationOn as LocationIcon,
   CalendarToday as CalendarIcon,
   People as PeopleIcon,
-  AttachMoney as MoneyIcon
+  AttachMoney as MoneyIcon,
+  AccessTime as AccessTimeIcon
 } from '@mui/icons-material';
 import axios from 'axios';
 import { API_BASE_URL } from '../../config/constants';
@@ -380,6 +381,13 @@ const TournoisPage: React.FC = () => {
                       <CalendarIcon sx={{ fontSize: 16, mr: 1, color: 'text.secondary' }} />
                       <Typography variant="body2">
                         {formatDate(tournoi.date_debut)} - {formatDate(tournoi.date_fin)}
+                      </Typography>
+                    </Box>
+
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                      <AccessTimeIcon sx={{ fontSize: 16, mr: 1, color: 'warning.main' }} />
+                      <Typography variant="body2" sx={{ color: 'warning.main', fontWeight: 600 }}>
+                        Inscription avant le {formatDate(tournoi.date_limite_inscription)}
                       </Typography>
                     </Box>
 

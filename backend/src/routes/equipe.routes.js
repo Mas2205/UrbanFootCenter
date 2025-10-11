@@ -5,6 +5,14 @@ const { authMiddleware, sportsMiddleware } = require('../middlewares/auth.middle
 
 // Middleware d'authentification pour toutes les routes
 router.use(authMiddleware);
+
+/**
+ * @route GET /api/equipes/my-team
+ * @desc Récupérer l'équipe de l'utilisateur connecté (en tant que capitaine)
+ * @access Private (clients)
+ */
+router.get('/my-team', equipeController.getMyTeam);
+
 /**
  * @route GET /api/equipes
  * @desc Lister les équipes avec pagination et filtres

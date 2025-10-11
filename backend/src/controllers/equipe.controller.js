@@ -7,6 +7,82 @@ const {
 } = require('../models');
 
 class EquipeController {
+  // Récupérer l'équipe de l'utilisateur connecté (en tant que capitaine)
+  async getMyTeam(req, res) {
+    try {
+      const userId = req.user.id;
+      
+      // Chercher l'équipe où l'utilisateur est capitaine
+      const equipe = await Equipe.findOne({
+        where: { capitaine_id: userId },
+        include: [
+          {
+            model: User,
+            as: 'capitaine',
+            attributes: ['id', 'first_name', 'last_name', 'email']
+          },
+          {
+            model: Field,
+            as: 'terrain',
+            attributes: ['id', 'name', 'location']
+          },
+          {
+            model: MembreEquipe,
+            as: 'membres',
+            include: [
+              {
+                model: User,
+                as: 'user',
+                attributes: ['id', 'first_name', 'last_name', 'email', 'phone_number']
+              }
+            ]
+          }
+        ]
+      });
+
+      if (!equipe) {
+        return res.status(404).json({
+          success: false,
+          message: 'Aucune équipe trouvée pour cet utilisateur'
+        });
+      }
+
+      // Formater les données pour le frontend
+      const equipeFormatted = {
+        id: equipe.id,
+        nom: equipe.nom,
+        logo_url: equipe.logo_url,
+        couleur_maillot: equipe.couleur_maillot,
+        description: equipe.description,
+        ville: equipe.terrain?.location || '',
+        capitaine_id: equipe.capitaine_id,
+        membres: equipe.membres?.map(membre => ({
+          id: membre.user.id,
+          nom: membre.user.last_name,
+          prenom: membre.user.first_name,
+          email: membre.user.email,
+          telephone: membre.user.phone_number,
+          poste: membre.poste || 'Joueur',
+          numero_maillot: membre.numero_maillot || 0,
+          statut: membre.statut || 'actif'
+        })) || []
+      };
+
+      res.json({
+        success: true,
+        data: equipeFormatted
+      });
+
+    } catch (error) {
+      console.error('Erreur récupération équipe utilisateur:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erreur lors de la récupération de l\'équipe',
+        error: error.message
+      });
+    }
+  }
+
   // Créer une nouvelle équipe
   async createEquipe(req, res) {
     try {
