@@ -890,7 +890,8 @@ class TournoiController {
               date_match: new Date(dateBase.getTime() + (i/2) * 2 * 60 * 60 * 1000), // 2h d'écart entre matchs
               terrain_id: tournoi.terrain_id,
               created_by: req.user.id,
-              statut: 'programme'
+              statut: 'a_venir', // Statut valide selon l'enum
+              numero_match: (i/2) + 1 // Numéro du match dans le tour
             });
             
             matchsDuTour.push(match);
@@ -987,6 +988,24 @@ class TournoiController {
               as: 'equipe',
               attributes: ['id', 'nom', 'logo_url']
             }]
+          },
+          {
+            model: MatchTournoi,
+            as: 'matchs',
+            required: false,
+            include: [
+              {
+                model: Equipe,
+                as: 'equipe1',
+                attributes: ['id', 'nom', 'logo_url']
+              },
+              {
+                model: Equipe,
+                as: 'equipe2',
+                attributes: ['id', 'nom', 'logo_url']
+              }
+            ],
+            order: [['phase', 'ASC'], ['numero_match', 'ASC']]
           }
         ]
       });

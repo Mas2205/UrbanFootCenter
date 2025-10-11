@@ -1231,14 +1231,112 @@ const TournoisPage: React.FC = () => {
                 </Alert>
               )}
 
-              {/* Ici on affichera la liste des matchs avec formulaires de saisie */}
-              <Card>
-                <CardContent>
-                  <Typography color="text.secondary" textAlign="center" py={4}>
-                    Interface de saisie des matchs à implémenter
-                  </Typography>
-                </CardContent>
-              </Card>
+              {/* Liste des matchs */}
+              {tournoiDetails?.matchs && tournoiDetails.matchs.length > 0 ? (
+                <Box>
+                  {/* Grouper les matchs par phase */}
+                  {Object.entries(
+                    tournoiDetails.matchs.reduce((acc: any, match: any) => {
+                      if (!acc[match.phase]) acc[match.phase] = [];
+                      acc[match.phase].push(match);
+                      return acc;
+                    }, {})
+                  ).map(([phase, matchs]: [string, any]) => (
+                    <Card key={phase} sx={{ mb: 2 }}>
+                      <CardContent>
+                        <Typography variant="h6" gutterBottom>
+                          🏆 {phase.charAt(0).toUpperCase() + phase.slice(1)}
+                        </Typography>
+                        
+                        {(matchs as any[]).map((match: any, index: number) => (
+                          <Card key={match.id} variant="outlined" sx={{ mb: 2 }}>
+                            <CardContent>
+                              <Grid container spacing={2} alignItems="center">
+                                <Grid item xs={12} md={3}>
+                                  <Typography variant="body2" color="text.secondary">
+                                    Match {match.numero_match}
+                                  </Typography>
+                                  <Typography variant="body2">
+                                    {new Date(match.date_match).toLocaleDateString('fr-FR')}
+                                  </Typography>
+                                </Grid>
+                                
+                                <Grid item xs={12} md={6}>
+                                  <Box display="flex" alignItems="center" justifyContent="center" gap={2}>
+                                    <Box textAlign="center" flex={1}>
+                                      <Typography variant="body1" fontWeight="bold">
+                                        {match.equipe1?.nom || 'Équipe 1'}
+                                      </Typography>
+                                    </Box>
+                                    
+                                    <Box display="flex" alignItems="center" gap={1}>
+                                      <TextField
+                                        size="small"
+                                        type="number"
+                                        value={match.score1 || 0}
+                                        inputProps={{ min: 0, max: 99, style: { textAlign: 'center', width: '40px' } }}
+                                        disabled={match.statut === 'termine'}
+                                      />
+                                      <Typography variant="h6">-</Typography>
+                                      <TextField
+                                        size="small"
+                                        type="number"
+                                        value={match.score2 || 0}
+                                        inputProps={{ min: 0, max: 99, style: { textAlign: 'center', width: '40px' } }}
+                                        disabled={match.statut === 'termine'}
+                                      />
+                                    </Box>
+                                    
+                                    <Box textAlign="center" flex={1}>
+                                      <Typography variant="body1" fontWeight="bold">
+                                        {match.equipe2?.nom || 'Équipe 2'}
+                                      </Typography>
+                                    </Box>
+                                  </Box>
+                                </Grid>
+                                
+                                <Grid item xs={12} md={3}>
+                                  <Box display="flex" flexDirection="column" gap={1}>
+                                    <Chip 
+                                      label={match.statut === 'a_venir' ? 'À venir' : 
+                                             match.statut === 'en_cours' ? 'En cours' :
+                                             match.statut === 'termine' ? 'Terminé' : match.statut}
+                                      color={match.statut === 'termine' ? 'success' : 
+                                             match.statut === 'en_cours' ? 'warning' : 'default'}
+                                      size="small"
+                                    />
+                                    {match.statut !== 'termine' && (
+                                      <Button
+                                        size="small"
+                                        variant="contained"
+                                        color="primary"
+                                        onClick={() => {
+                                          // TODO: Implémenter la sauvegarde du score
+                                          console.log('Sauvegarder match:', match.id);
+                                        }}
+                                      >
+                                        Sauvegarder
+                                      </Button>
+                                    )}
+                                  </Box>
+                                </Grid>
+                              </Grid>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </Box>
+              ) : (
+                <Card>
+                  <CardContent>
+                    <Typography color="text.secondary" textAlign="center" py={4}>
+                      Aucun match généré. Effectuez d'abord le tirage au sort.
+                    </Typography>
+                  </CardContent>
+                </Card>
+              )}
             </Box>
           </DialogContent>
           <DialogActions>
