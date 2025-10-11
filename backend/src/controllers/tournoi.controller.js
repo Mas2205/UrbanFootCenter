@@ -8,9 +8,8 @@ const {
   Field 
 } = require('../models');
 
-class TournoiController {
-  // Fonction utilitaire pour fermer automatiquement les inscriptions expirées
-  async fermerInscriptionsExpirees() {
+// Fonction utilitaire pour fermer automatiquement les inscriptions expirées
+async function fermerInscriptionsExpirees() {
     try {
       const maintenant = new Date();
       
@@ -61,8 +60,9 @@ class TournoiController {
       console.error('❌ Erreur fermeture automatique:', error);
       return 0;
     }
-  }
+}
 
+class TournoiController {
   // Créer un nouveau tournoi
   async createTournoi(req, res) {
     try {
@@ -172,7 +172,7 @@ class TournoiController {
       console.log('🔍 Début getTournois - User role:', req.user?.role);
       
       // Vérifier et fermer automatiquement les inscriptions expirées
-      await this.fermerInscriptionsExpirees();
+      await fermerInscriptionsExpirees();
       
       const { page = 1, limit = 10, terrain_id, statut, search, ville } = req.query;
       const offset = (page - 1) * limit;
@@ -1127,16 +1127,17 @@ class TournoiController {
         });
       }
 
-      // Vérifier les permissions
+      // Vérifier les permissions (même logique que getTournois)
       if (req.user.role === 'admin') {
-        // Vérifier si l'admin a accès à ce terrain via son field_id
-        if (req.user.field_id !== tournoi.terrain_id) {
+        // Si l'admin a un field_id, vérifier qu'il correspond au terrain du tournoi
+        if (req.user.field_id && req.user.field_id !== tournoi.terrain_id) {
           return res.status(403).json({
             success: false,
             message: 'Accès non autorisé à ce tournoi'
           });
         }
       }
+      // Les super_admin peuvent supprimer tous les tournois (pas de vérification)
 
       // Empêcher la suppression si le tournoi a commencé
       if (['en_cours', 'termine'].includes(tournoi.statut)) {
@@ -1171,3 +1172,4 @@ class TournoiController {
 }
 
 module.exports = new TournoiController();
+module.exports.fermerInscriptionsExpirees = fermerInscriptionsExpirees;

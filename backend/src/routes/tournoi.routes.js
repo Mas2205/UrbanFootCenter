@@ -33,7 +33,9 @@ const adminMiddleware = (req, res, next) => {
  */
 router.post('/fermer-inscriptions-expirees', adminMiddleware, async (req, res) => {
   try {
-    const nombreTournoisFermes = await tournoiController.fermerInscriptionsExpirees();
+    // Importer la fonction utilitaire
+    const { fermerInscriptionsExpirees } = require('../controllers/tournoi.controller');
+    const nombreTournoisFermes = await fermerInscriptionsExpirees();
     res.json({
       success: true,
       message: `${nombreTournoisFermes} tournois fermés automatiquement`,
