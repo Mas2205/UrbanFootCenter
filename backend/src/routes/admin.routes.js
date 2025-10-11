@@ -1,5 +1,15 @@
 const express = require('express');
 const router = express.Router();
+
+const regionRoutes = require('./admin/region.routes');
+const schemaRoutes = require('./admin/schema.routes');
+
+// Utiliser les routes des régions
+router.use('/regions', regionRoutes);
+
+// Utiliser les routes de gestion du schéma
+router.use('/schema', schemaRoutes);
+
 const adminController = require('../controllers/admin.controller');
 const regionController = require('../controllers/region.controller');
 const { authMiddleware, roleMiddleware, userManagementMiddleware, adminMiddleware } = require('../middlewares/auth.middleware');
