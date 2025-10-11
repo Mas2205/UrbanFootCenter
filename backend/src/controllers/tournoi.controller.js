@@ -9,6 +9,60 @@ const {
 } = require('../models');
 
 class TournoiController {
+  // Fonction utilitaire pour fermer automatiquement les inscriptions expirées
+  async fermerInscriptionsExpirees() {
+    try {
+      const maintenant = new Date();
+      
+      // Trouver les tournois dont la date limite est dépassée
+      const tournoisExpires = await Tournoi.findAll({
+        where: {
+          statut: 'inscriptions_ouvertes',
+          date_limite_inscription: {
+            [Op.lt]: maintenant
+          }
+        }
+      });
+      
+      for (const tournoi of tournoisExpires) {
+        console.log(`🕒 Fermeture automatique des inscriptions pour: ${tournoi.nom}`);
+        
+        // Fermer les inscriptions
+        await tournoi.update({ statut: 'inscriptions_fermees' });
+        
+        // Refuser toutes les demandes en attente
+        const participationsEnAttente = await ParticipationTournoi.findAll({
+          where: {
+            tournoi_id: tournoi.id,
+            statut: 'en_attente'
+          }
+        });
+        
+        if (participationsEnAttente.length > 0) {
+          await ParticipationTournoi.update(
+            { 
+              statut: 'refuse',
+              motif_refus: 'Inscriptions fermées automatiquement - Date limite dépassée'
+            },
+            {
+              where: {
+                tournoi_id: tournoi.id,
+                statut: 'en_attente'
+              }
+            }
+          );
+          
+          console.log(`✅ ${participationsEnAttente.length} demandes en attente refusées (date limite)`);
+        }
+      }
+      
+      return tournoisExpires.length;
+    } catch (error) {
+      console.error('❌ Erreur fermeture automatique:', error);
+      return 0;
+    }
+  }
+
   // Créer un nouveau tournoi
   async createTournoi(req, res) {
     try {
@@ -116,6 +170,10 @@ class TournoiController {
   async getTournois(req, res) {
     try {
       console.log('🔍 Début getTournois - User role:', req.user?.role);
+      
+      // Vérifier et fermer automatiquement les inscriptions expirées
+      await this.fermerInscriptionsExpirees();
+      
       const { page = 1, limit = 10, terrain_id, statut, search, ville } = req.query;
       const offset = (page - 1) * limit;
 
@@ -600,6 +658,31 @@ class TournoiController {
         if (participationsValides >= participation.tournoi.nombre_max_equipes) {
           await participation.tournoi.update({ statut: 'inscriptions_fermees' });
           console.log('✅ Tournoi complet - Inscriptions fermées automatiquement');
+          
+          // Refuser automatiquement toutes les demandes en attente
+          const participationsEnAttente = await ParticipationTournoi.findAll({
+            where: {
+              tournoi_id: participation.tournoi_id,
+              statut: 'en_attente'
+            }
+          });
+          
+          if (participationsEnAttente.length > 0) {
+            await ParticipationTournoi.update(
+              { 
+                statut: 'refuse',
+                motif_refus: 'Inscriptions fermées automatiquement - Tournoi complet'
+              },
+              {
+                where: {
+                  tournoi_id: participation.tournoi_id,
+                  statut: 'en_attente'
+                }
+              }
+            );
+            
+            console.log(`✅ ${participationsEnAttente.length} demandes en attente refusées automatiquement`);
+          }
         }
       }
 

@@ -25,6 +25,29 @@ const adminMiddleware = (req, res, next) => {
   });
 };
 
+// Route utilitaire pour fermer automatiquement les inscriptions expirées
+/**
+ * @route POST /api/tournois/fermer-inscriptions-expirees
+ * @desc Fermer automatiquement les inscriptions expirées et refuser les demandes en attente
+ * @access Private (Admin uniquement)
+ */
+router.post('/fermer-inscriptions-expirees', adminMiddleware, async (req, res) => {
+  try {
+    const nombreTournoisFermes = await tournoiController.fermerInscriptionsExpirees();
+    res.json({
+      success: true,
+      message: `${nombreTournoisFermes} tournois fermés automatiquement`,
+      data: { nombreTournoisFermes }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la fermeture automatique',
+      error: error.message
+    });
+  }
+});
+
 // Routes publiques (tous les utilisateurs connectés)
 /**
  * @route GET /api/tournois
