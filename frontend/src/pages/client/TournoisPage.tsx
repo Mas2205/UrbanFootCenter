@@ -52,6 +52,7 @@ interface Tournoi {
     equipes_en_attente: number;
     places_restantes: number;
   };
+  participation_status?: 'en_attente' | 'valide' | 'refuse' | null;
 }
 
 const TournoisPage: React.FC = () => {
@@ -163,6 +164,49 @@ const TournoisPage: React.FC = () => {
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('fr-FR').format(price) + ' FCFA';
+  };
+
+  // Fonction pour obtenir le statut du bouton selon l'état de participation
+  const getButtonConfig = (tournoi: Tournoi) => {
+    if (tournoi.stats.places_restantes <= 0) {
+      return {
+        text: 'Complet',
+        color: 'inherit' as const,
+        disabled: true,
+        variant: 'outlined' as const
+      };
+    }
+
+    switch (tournoi.participation_status) {
+      case 'en_attente':
+        return {
+          text: 'En cours de validation',
+          color: 'warning' as const,
+          disabled: true,
+          variant: 'contained' as const
+        };
+      case 'valide':
+        return {
+          text: 'Validé',
+          color: 'success' as const,
+          disabled: true,
+          variant: 'contained' as const
+        };
+      case 'refuse':
+        return {
+          text: 'Refusé',
+          color: 'error' as const,
+          disabled: true,
+          variant: 'contained' as const
+        };
+      default:
+        return {
+          text: 'S\'inscrire',
+          color: 'primary' as const,
+          disabled: false,
+          variant: 'contained' as const
+        };
+    }
   };
 
   useEffect(() => {
@@ -364,17 +408,25 @@ const TournoisPage: React.FC = () => {
                 </CardContent>
 
                 <CardActions sx={{ p: 2, pt: 0 }}>
-                  <Button
-                    variant="contained"
-                    fullWidth
-                    onClick={() => {
-                      setSelectedTournoi(tournoi);
-                      setOpenDialog(true);
-                    }}
-                    disabled={tournoi.stats.places_restantes <= 0}
-                  >
-                    {tournoi.stats.places_restantes <= 0 ? 'Complet' : 'S\'inscrire'}
-                  </Button>
+                  {(() => {
+                    const buttonConfig = getButtonConfig(tournoi);
+                    return (
+                      <Button
+                        variant={buttonConfig.variant}
+                        color={buttonConfig.color}
+                        fullWidth
+                        onClick={() => {
+                          if (!buttonConfig.disabled) {
+                            setSelectedTournoi(tournoi);
+                            setOpenDialog(true);
+                          }
+                        }}
+                        disabled={buttonConfig.disabled}
+                      >
+                        {buttonConfig.text}
+                      </Button>
+                    );
+                  })()}
                 </CardActions>
               </Card>
             </Box>

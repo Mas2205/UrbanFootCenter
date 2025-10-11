@@ -184,6 +184,18 @@ class TournoiController {
         terrainsMap[terrain.id] = terrain;
       });
 
+      // Récupérer l'équipe du client connecté (si c'est un client)
+      let userEquipe = null;
+      if (req.user.role === 'client') {
+        try {
+          userEquipe = await Equipe.findOne({
+            where: { capitaine_id: req.user.id }
+          });
+        } catch (error) {
+          console.log('Erreur récupération équipe utilisateur:', error.message);
+        }
+      }
+
       // Ajouter les informations terrain et statistiques à chaque tournoi
       const tournoisAvecStats = await Promise.all(tournois.map(async tournoi => {
         let terrain;
@@ -204,16 +216,25 @@ class TournoiController {
         // Calculer les statistiques (récupération séparée pour éviter les erreurs)
         let equipesValidees = 0;
         let equipesEnAttente = 0;
+        let participationStatus = null;
         
         try {
           const participationsCount = await ParticipationTournoi.findAll({
             where: { tournoi_id: tournoi.id },
-            attributes: ['statut'],
+            attributes: ['statut', 'equipe_id'],
             raw: true
           });
           
           equipesValidees = participationsCount.filter(p => p.statut === 'valide').length;
           equipesEnAttente = participationsCount.filter(p => p.statut === 'en_attente').length;
+
+          // Vérifier le statut de participation de l'équipe du client
+          if (userEquipe) {
+            const userParticipation = participationsCount.find(p => p.equipe_id === userEquipe.id);
+            if (userParticipation) {
+              participationStatus = userParticipation.statut;
+            }
+          }
         } catch (error) {
           console.log('Erreur calcul stats:', error.message);
         }
@@ -221,6 +242,7 @@ class TournoiController {
         return {
           ...tournoi.toJSON(),
           terrain,
+          participation_status: participationStatus,
           stats: {
             equipes_inscrites: equipesValidees,
             equipes_en_attente: equipesEnAttente,
