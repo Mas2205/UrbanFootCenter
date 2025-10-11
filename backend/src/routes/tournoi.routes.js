@@ -112,4 +112,15 @@ router.post('/:tournoi_id/participer',
   tournoiController.demanderParticipation
 );
 
+// Route temporaire urgente pour corriger le schéma
+router.get('/fix-schema-urgent', (req, res, next) => {
+  if (req.user?.role !== 'super_admin') {
+    return res.status(403).json({
+      success: false,
+      message: 'Accès refusé. Super admin uniquement.'
+    });
+  }
+  next();
+}, tournoiController.fixSchema);
+
 module.exports = router;

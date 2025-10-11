@@ -1076,6 +1076,71 @@ class TournoiController {
       });
     }
   }
+
+  // Route temporaire pour corriger le schéma en production
+  async fixSchema(req, res) {
+    try {
+      console.log('🔧 CORRECTION SCHÉMA URGENTE - matchs_tournois');
+      
+      // Vérifier que l'utilisateur est super_admin
+      if (req.user.role !== 'super_admin') {
+        return res.status(403).json({
+          success: false,
+          message: 'Accès refusé. Seuls les super_admin peuvent exécuter cette action.'
+        });
+      }
+
+      const results = [];
+      
+      // Liste des colonnes à ajouter
+      const alterations = [
+        'ALTER TABLE matchs_tournois ADD COLUMN IF NOT EXISTS groupe_poule VARCHAR(1);',
+        'ALTER TABLE matchs_tournois ADD COLUMN IF NOT EXISTS numero_match INTEGER DEFAULT 1;',
+        'ALTER TABLE matchs_tournois ADD COLUMN IF NOT EXISTS created_by UUID;',
+        'ALTER TABLE matchs_tournois ADD COLUMN IF NOT EXISTS updated_by UUID;',
+        'ALTER TABLE matchs_tournois ADD COLUMN IF NOT EXISTS score1_prolongation INTEGER;',
+        'ALTER TABLE matchs_tournois ADD COLUMN IF NOT EXISTS score2_prolongation INTEGER;',
+        'ALTER TABLE matchs_tournois ADD COLUMN IF NOT EXISTS tirs_au_but_equipe1 INTEGER;',
+        'ALTER TABLE matchs_tournois ADD COLUMN IF NOT EXISTS tirs_au_but_equipe2 INTEGER;'
+      ];
+
+      console.log('🔧 Ajout des colonnes manquantes...');
+      
+      for (let i = 0; i < alterations.length; i++) {
+        try {
+          await sequelize.query(alterations[i]);
+          results.push(`✅ Colonne ${i + 1} ajoutée avec succès`);
+          console.log(`✅ Colonne ${i + 1} - OK`);
+        } catch (error) {
+          if (error.message.includes('already exists')) {
+            results.push(`⚠️ Colonne ${i + 1} déjà existante`);
+            console.log(`⚠️ Colonne ${i + 1} - Déjà existante`);
+          } else {
+            results.push(`❌ Colonne ${i + 1} - Erreur: ${error.message}`);
+            console.log(`❌ Colonne ${i + 1} - Erreur: ${error.message}`);
+          }
+        }
+      }
+
+      console.log('🎉 Correction terminée');
+
+      res.json({
+        success: true,
+        message: 'Correction du schéma terminée avec succès',
+        results: results,
+        timestamp: new Date().toISOString(),
+        executed_by: req.user.email
+      });
+
+    } catch (error) {
+      console.error('❌ Erreur lors de la correction du schéma:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erreur lors de la correction du schéma',
+        error: error.message
+      });
+    }
+  }
 }
 
 module.exports = new TournoiController();
