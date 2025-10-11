@@ -351,7 +351,7 @@ const TournoisPage: React.FC = () => {
   };
 
   const getProgressValue = (tournoi: Tournoi) => {
-    return (tournoi.stats.equipes_inscrites / tournoi.nombre_max_equipes) * 100;
+    return ((tournoi.stats?.equipes_inscrites || 0) / tournoi.nombre_max_equipes) * 100;
   };
 
   if (loading && tournois.length === 0) {
@@ -499,7 +499,7 @@ const TournoisPage: React.FC = () => {
                           onClick={() => openParticipationsModal(tournoi)}
                           color="primary"
                         >
-                          <Badge badgeContent={tournoi.stats.equipes_en_attente} color="error">
+                          <Badge badgeContent={tournoi.stats?.equipes_en_attente || 0} color="error">
                             <PeopleIcon />
                           </Badge>
                         </IconButton>
@@ -520,7 +520,7 @@ const TournoisPage: React.FC = () => {
                   {/* Informations */}
                   <Box mb={2}>
                     <Typography variant="body2" color="text.secondary" gutterBottom>
-                      <strong>Terrain:</strong> {tournoi.terrain.name}
+                      <strong>Terrain:</strong> {tournoi.terrain?.name || 'Terrain non défini'}
                     </Typography>
                     <Typography variant="body2" color="text.secondary" gutterBottom>
                       <strong>Dates:</strong> {new Date(tournoi.date_debut).toLocaleDateString('fr-FR')} - {new Date(tournoi.date_fin).toLocaleDateString('fr-FR')}
@@ -547,7 +547,7 @@ const TournoisPage: React.FC = () => {
                         Inscriptions
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {tournoi.stats.equipes_inscrites}/{tournoi.nombre_max_equipes}
+                        {tournoi.stats?.equipes_inscrites || 0}/{tournoi.nombre_max_equipes}
                       </Typography>
                     </Box>
                     <LinearProgress 
@@ -569,19 +569,19 @@ const TournoisPage: React.FC = () => {
                     <Box display="flex" alignItems="center" gap={1}>
                       <CheckIcon fontSize="small" color="success" />
                       <Typography variant="body2">
-                        {tournoi.stats.equipes_inscrites} validées
+                        {tournoi.stats?.equipes_inscrites || 0} validées
                       </Typography>
                     </Box>
                     <Box display="flex" alignItems="center" gap={1}>
                       <PendingIcon fontSize="small" color="warning" />
                       <Typography variant="body2">
-                        {tournoi.stats.equipes_en_attente} en attente
+                        {tournoi.stats?.equipes_en_attente || 0} en attente
                       </Typography>
                     </Box>
                     <Box display="flex" alignItems="center" gap={1}>
                       <ScheduleIcon fontSize="small" color="action" />
                       <Typography variant="body2">
-                        {tournoi.stats.places_restantes} places
+                        {tournoi.stats?.places_restantes || 0} places
                       </Typography>
                     </Box>
                   </Box>
@@ -617,7 +617,7 @@ const TournoisPage: React.FC = () => {
                           Gérer les inscriptions
                           {tournoi.stats?.equipes_en_attente > 0 && (
                             <Badge
-                              badgeContent={tournoi.stats.equipes_en_attente}
+                              badgeContent={tournoi.stats?.equipes_en_attente || 0}
                               color="error"
                               sx={{ ml: 1 }}
                             />
@@ -897,19 +897,19 @@ const TournoisPage: React.FC = () => {
             Gestion des participations - {selectedTournoi?.nom}
           </DialogTitle>
           <DialogContent>
-            {selectedTournoi?.participations.length === 0 ? (
+            {!selectedTournoi?.participations || selectedTournoi.participations.length === 0 ? (
               <Typography color="text.secondary" textAlign="center" py={4}>
                 Aucune participation pour ce tournoi
               </Typography>
             ) : (
               <Box sx={{ pt: 1 }}>
-                {selectedTournoi?.participations.map((participation) => (
+                {selectedTournoi.participations?.map((participation) => (
                   <Card key={participation.id} sx={{ mb: 2 }}>
                     <CardContent>
                       <Box display="flex" justifyContent="space-between" alignItems="center">
                         <Box display="flex" alignItems="center" gap={2}>
                           <Typography variant="h6">
-                            {participation.equipe.nom}
+                            {participation.equipe?.nom || 'Équipe inconnue'}
                           </Typography>
                           <Chip 
                             label={participation.statut === 'en_attente' ? 'En attente' : 
