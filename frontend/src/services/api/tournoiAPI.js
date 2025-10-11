@@ -36,7 +36,9 @@ class TournoiAPI {
       const response = await axios.get(`${API_BASE_URL}/tournois/${id}`, {
         headers: getAuthHeader()
       });
-      return response.data;
+      console.log('🔍 tournoiAPI.getTournoiById - Status:', response.status);
+      console.log('🔍 tournoiAPI.getTournoiById - Data:', response.data);
+      return response;
     } catch (error) {
       console.error('Erreur récupération tournoi:', error);
       throw error;

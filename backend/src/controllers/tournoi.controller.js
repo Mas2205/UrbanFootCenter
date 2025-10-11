@@ -324,22 +324,8 @@ class TournoiController {
 
       // Vérifier les permissions pour les admins
       if (req.user.role === 'admin') {
-        const hasAccess = await Field.findOne({
-          where: {
-            id: tournoi.terrain_id,
-            [Op.or]: [
-              { admin_id: req.user.id },
-              { '$employees.user_id$': req.user.id }
-            ]
-          },
-          include: [{
-            model: User,
-            as: 'employees',
-            required: false
-          }]
-        });
-
-        if (!hasAccess && req.user.role !== 'super_admin') {
+        // Vérifier si l'admin a accès à ce terrain via son field_id
+        if (req.user.field_id !== tournoi.terrain_id) {
           return res.status(403).json({
             success: false,
             message: 'Accès non autorisé à ce tournoi'

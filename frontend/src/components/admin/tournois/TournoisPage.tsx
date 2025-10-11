@@ -210,10 +210,35 @@ const TournoisPage: React.FC = () => {
     }
   };
 
-  const handleGererInscriptions = (tournoiId: string) => {
-    const tournoi = tournois.find(t => t.id === tournoiId);
-    setSelectedTournoi(tournoi || null);
-    setOpenParticipationsDialog(true);
+  const handleGererInscriptions = async (tournoiId: string) => {
+    try {
+      console.log('🔍 Gestion inscriptions - Tournoi ID:', tournoiId);
+      setError(null);
+      
+      // Charger les détails du tournoi avec les participations
+      console.log('📡 Chargement des détails du tournoi...');
+      const response = await tournoiAPI.getTournoiById(tournoiId);
+      
+      console.log('📊 Réponse API complète:', response);
+      console.log('📊 Status:', response.status);
+      console.log('📊 Data:', response.data);
+      
+      if (response.data && response.data.success) {
+        const tournoi = response.data.data;
+        console.log('🏆 Tournoi chargé:', tournoi.nom);
+        console.log('👥 Participations:', tournoi.participations?.length || 0);
+        
+        setSelectedTournoi(tournoi);
+        setOpenParticipationsDialog(true);
+        console.log('✅ Dialog ouvert');
+      } else {
+        console.error('❌ Erreur API:', response.data.message);
+        setError(response.data.message || 'Erreur lors du chargement');
+      }
+    } catch (error: any) {
+      console.error('❌ Erreur lors du chargement des participations:', error);
+      setError(error.response?.data?.message || 'Erreur lors du chargement des participations');
+    }
   };
 
   const handleTirageAuSort = async (tournoiId: string) => {
@@ -897,9 +922,19 @@ const TournoisPage: React.FC = () => {
             Gestion des participations - {selectedTournoi?.nom}
           </DialogTitle>
           <DialogContent>
+            {(() => {
+              console.log('🎭 Rendu dialog - selectedTournoi:', selectedTournoi?.nom);
+              console.log('🎭 Participations:', selectedTournoi?.participations);
+              return null;
+            })()}
             {!selectedTournoi?.participations || selectedTournoi.participations.length === 0 ? (
               <Typography color="text.secondary" textAlign="center" py={4}>
                 Aucune participation pour ce tournoi
+                {selectedTournoi && (
+                  <Typography variant="caption" display="block" sx={{ mt: 1 }}>
+                    Tournoi: {selectedTournoi.nom} - Participations: {selectedTournoi.participations?.length || 0}
+                  </Typography>
+                )}
               </Typography>
             ) : (
               <Box sx={{ pt: 1 }}>
