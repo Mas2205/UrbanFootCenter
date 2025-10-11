@@ -46,7 +46,8 @@ import {
   Home,
   Groups as GroupsIcon,
   EmojiEvents as TrophyIcon,
-  WorkspacePremium as ChampionshipIcon
+  WorkspacePremium as ChampionshipIcon,
+  LocationOn as LocationIcon
 } from '@mui/icons-material';
 
 // Largeur du drawer
@@ -120,6 +121,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
   // Items du menu spécifiques au super admin
   const superAdminMenuItems = [
+    { text: 'Régions', path: '/admin/regions', icon: <LocationIcon /> },
     { text: t('admin.schedules', 'Créneaux horaires'), path: '/admin/timeslots', icon: <Schedule /> },
     { text: t('admin.availability', 'Gestion des disponibilités'), path: '/admin/manage-availability', icon: <Schedule /> },
   ];

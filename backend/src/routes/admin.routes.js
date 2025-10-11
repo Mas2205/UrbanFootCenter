@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/admin.controller');
+const regionController = require('../controllers/region.controller');
 const { authMiddleware, roleMiddleware, userManagementMiddleware, adminMiddleware } = require('../middlewares/auth.middleware');
 const { asyncHandler } = require('../middlewares/error.middleware');
 
@@ -59,5 +60,47 @@ router.patch('/users/:id/reset-password', authMiddleware, roleMiddleware(['admin
  * @access Private (Admin et Super Admin)
  */
 router.get('/timeslots', authMiddleware, roleMiddleware(['admin', 'super_admin']), asyncHandler(adminController.getAllTimeSlots));
+
+/**
+ * @route GET /api/admin/regions/export
+ * @desc Exporte toutes les régions en Excel
+ * @access Private (Super Admin only)
+ */
+router.get('/regions/export', authMiddleware, roleMiddleware(['super_admin']), asyncHandler(regionController.exportRegions));
+
+/**
+ * @route POST /api/admin/regions/import
+ * @desc Importe des régions depuis un fichier Excel
+ * @access Private (Super Admin only)
+ */
+router.post('/regions/import', authMiddleware, roleMiddleware(['super_admin']), regionController.uploadMiddleware, asyncHandler(regionController.importRegions));
+
+/**
+ * @route GET /api/admin/regions/:id
+ * @desc Récupère une région par ID
+ * @access Private (Super Admin only)
+ */
+router.get('/regions/:id', authMiddleware, roleMiddleware(['super_admin']), asyncHandler(regionController.getRegionById));
+
+/**
+ * @route POST /api/admin/regions
+ * @desc Crée une nouvelle région
+ * @access Private (Super Admin only)
+ */
+router.post('/regions', authMiddleware, roleMiddleware(['super_admin']), asyncHandler(regionController.createRegion));
+
+/**
+ * @route PUT /api/admin/regions/:id
+ * @desc Met à jour une région existante
+ * @access Private (Super Admin only)
+ */
+router.put('/regions/:id', authMiddleware, roleMiddleware(['super_admin']), asyncHandler(regionController.updateRegion));
+
+/**
+ * @route DELETE /api/admin/regions/:id
+ * @desc Supprime une région
+ * @access Private (Super Admin only)
+ */
+router.delete('/regions/:id', authMiddleware, roleMiddleware(['super_admin']), asyncHandler(regionController.deleteRegion));
 
 module.exports = router;

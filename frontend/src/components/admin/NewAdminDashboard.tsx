@@ -34,6 +34,9 @@ import EquipesPage from './equipes/EquipesPage';
 import TournoisPage from './tournois/TournoisPage';
 import ChampionnatsPage from './championnats/ChampionnatsPage';
 
+// Import de la gestion des régions
+import AdminRegions from './regions/AdminRegions';
+
 const NewAdminDashboard: React.FC = () => {
   const { user } = useAuth();
   const location = useLocation();
@@ -85,6 +88,9 @@ const NewAdminDashboard: React.FC = () => {
         <Route path="/payment-methods" element={<AdminPaymentMethods />} />
         
         {/* Nouvelles routes pour super admin */}
+        <Route path="/regions" element={
+          user.role === 'super_admin' ? <AdminRegions /> : <Navigate to="/admin" replace />
+        } />
         <Route path="/timeslots" element={
           user.role === 'super_admin' ? <AdminTimeSlots /> : <Navigate to="/admin" replace />
         } />

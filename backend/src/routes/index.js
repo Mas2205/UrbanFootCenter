@@ -47,8 +47,10 @@ try {
 
 try {
   router.use('/regions', require('./region.routes'));
+  console.log('✅ Routes regions chargées avec succès');
 } catch (e) {
-  console.log('⚠️  region.routes.js non trouvé, ignoré');
+  console.log('❌ Erreur lors du chargement des routes regions:', e.message);
+  console.log(e.stack);
 }
 
 try {
