@@ -113,11 +113,5 @@ router.put('/regions/:id', authMiddleware, roleMiddleware(['super_admin']), asyn
  */
 router.delete('/regions/:id', authMiddleware, roleMiddleware(['super_admin']), asyncHandler(regionController.deleteRegion));
 
-/**
- * @route GET /api/admin/fix-schema
- * @desc Corrige le schéma de la table matchs_tournois
- * @access Private (Super Admin only)
- */
-router.get('/fix-schema', authMiddleware, roleMiddleware(['super_admin']), asyncHandler(adminController.fixMatchsTournoisSchema));
 
 module.exports = router;

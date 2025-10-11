@@ -112,11 +112,5 @@ router.post('/:tournoi_id/participer',
   tournoiController.demanderParticipation
 );
 
-// Route temporaire urgente pour corriger le schéma (SANS AUTH pour urgence)
-router.get('/fix-schema-urgent', (req, res, next) => {
-  // Temporairement désactiver l'auth pour urgence production
-  req.user = { role: 'super_admin', email: 'system@urgent' };
-  next();
-}, tournoiController.fixSchema);
 
 module.exports = router;
