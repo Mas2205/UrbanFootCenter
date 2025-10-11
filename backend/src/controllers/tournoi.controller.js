@@ -1118,6 +1118,8 @@ class TournoiController {
   async deleteTournoi(req, res) {
     try {
       const { id } = req.params;
+      console.log('🗑️ Tentative suppression tournoi:', id);
+      console.log('👤 User:', req.user.id, req.user.role, req.user.field_id);
 
       const tournoi = await Tournoi.findByPk(id);
       if (!tournoi) {
@@ -1127,17 +1129,21 @@ class TournoiController {
         });
       }
 
-      // Vérifier les permissions (même logique que getTournois)
-      if (req.user.role === 'admin') {
-        // Si l'admin a un field_id, vérifier qu'il correspond au terrain du tournoi
-        if (req.user.field_id && req.user.field_id !== tournoi.terrain_id) {
+      console.log('🏆 Tournoi trouvé:', tournoi.nom, 'terrain_id:', tournoi.terrain_id);
+
+      // Vérifier les permissions - Admin peut supprimer les tournois de son terrain
+      // Si pas de field_id défini, l'admin peut supprimer tous les tournois (comme super_admin)
+      if (req.user.role === 'admin' && req.user.field_id) {
+        // Seulement vérifier si l'admin a un field_id spécifique
+        if (req.user.field_id !== tournoi.terrain_id) {
           return res.status(403).json({
             success: false,
             message: 'Accès non autorisé à ce tournoi'
           });
         }
       }
-      // Les super_admin peuvent supprimer tous les tournois (pas de vérification)
+      // Si admin sans field_id ou super_admin → peut supprimer tous les tournois
+      console.log('✅ Permissions générales OK - Poursuite suppression');
 
       // Empêcher la suppression si le tournoi a commencé
       if (['en_cours', 'termine'].includes(tournoi.statut)) {

@@ -92,7 +92,7 @@ router.put('/:id/statut',
  * @access Private (Super Admin, Admin)
  */
 router.delete('/:id', 
-  sportsMiddleware('write'), 
+  adminMiddleware, 
   tournoiController.deleteTournoi
 );
 
