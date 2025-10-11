@@ -817,8 +817,17 @@ class TournoiController {
         
       } else if (tournoi.format === 'elimination_directe') {
         // ⚡ FORMAT ÉLIMINATION DIRECTE
-        // Pas de poules, juste ordre aléatoire pour les matchs
         console.log(`⚡ Tirage élimination directe pour ${equipesAleatoires.length} équipes`);
+        
+        // Vérifier que c'est une puissance de 2
+        const isPowerOfTwo = (n) => n > 0 && (n & (n - 1)) === 0;
+        if (!isPowerOfTwo(equipesAleatoires.length)) {
+          return res.status(400).json({
+            success: false,
+            message: `Le nombre d'équipes (${equipesAleatoires.length}) doit être une puissance de 2 (2, 4, 8, 16, 32, 64...)`
+          });
+        }
+        
         groupes['ELIMINATION'] = equipesAleatoires;
         
       } else if (tournoi.format === 'championnat') {
@@ -855,48 +864,69 @@ class TournoiController {
       const matchsGeneres = [];
 
       if (tournoi.format === 'elimination_directe') {
-        // 🏆 ÉLIMINATION DIRECTE
+        // 🏆 ÉLIMINATION DIRECTE - GÉNÉRATION COMPLÈTE PAR TOURS
         const equipes = groupes['ELIMINATION'] || [];
         const nombreEquipes = equipes.length;
 
         console.log(`⚡ Génération matchs élimination directe pour ${nombreEquipes} équipes`);
 
-        if (nombreEquipes === 4) {
-          // Demi-finales
-          const match1 = await MatchTournoi.create({
-            tournoi_id: tournoi.id,
-            phase: 'demi',
-            equipe1_id: equipes[0].equipe.id,
-            equipe2_id: equipes[1].equipe.id,
-            date_match: new Date(Date.now() + 24 * 60 * 60 * 1000), // Demain
-            terrain_id: tournoi.terrain_id,
-            created_by: req.user.id
-          });
+        // Fonction pour générer les matchs d'élimination directe
+        const genererMatchsElimination = async (equipesRestantes, tour, phaseNom) => {
+          const matchsDuTour = [];
+          const dateBase = new Date(tournoi.date_debut);
+          dateBase.setDate(dateBase.getDate() + (tour - 1)); // Un jour par tour
+          
+          console.log(`🎯 Tour ${tour} - ${phaseNom}: ${equipesRestantes.length} équipes → ${equipesRestantes.length/2} matchs`);
+          
+          for (let i = 0; i < equipesRestantes.length; i += 2) {
+            const equipe1 = equipesRestantes[i];
+            const equipe2 = equipesRestantes[i + 1];
+            
+            const match = await MatchTournoi.create({
+              tournoi_id: tournoi.id,
+              phase: phaseNom,
+              equipe1_id: equipe1.equipe.id,
+              equipe2_id: equipe2.equipe.id,
+              date_match: new Date(dateBase.getTime() + (i/2) * 2 * 60 * 60 * 1000), // 2h d'écart entre matchs
+              terrain_id: tournoi.terrain_id,
+              created_by: req.user.id,
+              statut: 'programme'
+            });
+            
+            matchsDuTour.push(match);
+            console.log(`   Match ${i/2 + 1}: ${equipe1.equipe.nom} vs ${equipe2.equipe.nom}`);
+          }
+          
+          return matchsDuTour;
+        };
 
-          const match2 = await MatchTournoi.create({
-            tournoi_id: tournoi.id,
-            phase: 'demi',
-            equipe1_id: equipes[2].equipe.id,
-            equipe2_id: equipes[3].equipe.id,
-            date_match: new Date(Date.now() + 24 * 60 * 60 * 1000), // Demain
-            terrain_id: tournoi.terrain_id,
-            created_by: req.user.id
-          });
-
-          // Finale (équipes TBD - To Be Determined)
-          const finale = await MatchTournoi.create({
-            tournoi_id: tournoi.id,
-            phase: 'finale',
-            equipe1_id: equipes[0].equipe.id, // Temporaire - sera mis à jour
-            equipe2_id: equipes[1].equipe.id, // Temporaire - sera mis à jour
-            date_match: new Date(Date.now() + 48 * 60 * 60 * 1000), // Après-demain
-            terrain_id: tournoi.terrain_id,
-            created_by: req.user.id,
-            notes: 'Finale - Équipes à déterminer selon résultats demi-finales'
-          });
-
-          matchsGeneres.push(match1, match2, finale);
+        // Déterminer les phases selon le nombre d'équipes
+        const phases = [];
+        let nbEquipesActuel = nombreEquipes;
+        let tourNum = 1;
+        
+        while (nbEquipesActuel > 1) {
+          let phaseNom = '';
+          
+          if (nbEquipesActuel === 2) phaseNom = 'finale';
+          else if (nbEquipesActuel === 4) phaseNom = 'demi';
+          else if (nbEquipesActuel === 8) phaseNom = 'quart';
+          else if (nbEquipesActuel === 16) phaseNom = 'huitieme';
+          else if (nbEquipesActuel === 32) phaseNom = 'seizieme';
+          else if (nbEquipesActuel === 64) phaseNom = 'trentedeux';
+          else phaseNom = `tour_${tourNum}`;
+          
+          phases.push({ nbEquipes: nbEquipesActuel, phase: phaseNom, tour: tourNum });
+          nbEquipesActuel = nbEquipesActuel / 2;
+          tourNum++;
         }
+        
+        console.log('📋 Phases à générer:', phases.map(p => `${p.phase} (${p.nbEquipes} équipes)`).join(' → '));
+        
+        // Générer seulement le premier tour (les autres seront générés après les résultats)
+        const premierTour = phases[0];
+        const matchsPremierTour = await genererMatchsElimination(equipes, premierTour.tour, premierTour.phase);
+        matchsGeneres.push(...matchsPremierTour);
       }
 
       // Changer le statut du tournoi

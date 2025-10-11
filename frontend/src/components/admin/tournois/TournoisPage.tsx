@@ -379,6 +379,34 @@ const TournoisPage: React.FC = () => {
     return ((tournoi.stats?.equipes_inscrites || 0) / tournoi.nombre_max_equipes) * 100;
   };
 
+  // Fonction pour calculer le nombre de matchs en élimination directe
+  const calculateEliminationMatches = (nbEquipes: number) => {
+    if (nbEquipes < 2) return { tours: 0, matchs: 0, description: '' };
+    
+    // Vérifier si c'est une puissance de 2
+    const isPowerOfTwo = (n: number) => n > 0 && (n & (n - 1)) === 0;
+    
+    if (!isPowerOfTwo(nbEquipes)) {
+      return { tours: 0, matchs: 0, description: 'Le nombre d\'équipes doit être une puissance de 2 (2, 4, 8, 16, 32, 64...)' };
+    }
+    
+    const tours = Math.log2(nbEquipes);
+    const matchs = nbEquipes - 1; // Formule: n-1 matchs pour éliminer n-1 équipes
+    
+    const tourNames = {
+      1: 'Finale directe',
+      2: 'Demi-finales + Finale',
+      3: 'Quarts + Demi + Finale', 
+      4: '8èmes + Quarts + Demi + Finale',
+      5: '16èmes + 8èmes + Quarts + Demi + Finale',
+      6: '32èmes + 16èmes + 8èmes + Quarts + Demi + Finale'
+    };
+    
+    const description = tourNames[tours as keyof typeof tourNames] || `${tours} tours d'élimination`;
+    
+    return { tours, matchs, description };
+  };
+
   if (loading && tournois.length === 0) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
@@ -866,15 +894,64 @@ const TournoisPage: React.FC = () => {
                   />
                 </Grid>
                 <Grid item xs={12} md={4}>
-                  <TextField
-                    fullWidth
-                    label="Nombre max d'équipes"
-                    type="number"
-                    value={formData.nombre_max_equipes}
-                    onChange={(e) => setFormData({ ...formData, nombre_max_equipes: parseInt(e.target.value) || 16 })}
-                    inputProps={{ min: 4, max: 64 }}
-                  />
+                  {formData.format === 'elimination_directe' ? (
+                    <FormControl fullWidth>
+                      <InputLabel>Nombre max d'équipes</InputLabel>
+                      <Select
+                        value={formData.nombre_max_equipes}
+                        onChange={(e) => setFormData({ ...formData, nombre_max_equipes: parseInt(e.target.value as string) })}
+                        label="Nombre max d'équipes"
+                      >
+                        <MenuItem value={2}>2 équipes (1 match - Finale directe)</MenuItem>
+                        <MenuItem value={4}>4 équipes (3 matchs - Demi + Finale)</MenuItem>
+                        <MenuItem value={8}>8 équipes (7 matchs - Quarts + Demi + Finale)</MenuItem>
+                        <MenuItem value={16}>16 équipes (15 matchs - 8èmes + Quarts + Demi + Finale)</MenuItem>
+                        <MenuItem value={32}>32 équipes (31 matchs - 16èmes + 8èmes + Quarts + Demi + Finale)</MenuItem>
+                        <MenuItem value={64}>64 équipes (63 matchs - 32èmes + 16èmes + 8èmes + Quarts + Demi + Finale)</MenuItem>
+                      </Select>
+                    </FormControl>
+                  ) : (
+                    <TextField
+                      fullWidth
+                      label="Nombre max d'équipes"
+                      type="number"
+                      value={formData.nombre_max_equipes}
+                      onChange={(e) => setFormData({ ...formData, nombre_max_equipes: parseInt(e.target.value) || 16 })}
+                      inputProps={{ min: 4, max: 64 }}
+                    />
+                  )}
                 </Grid>
+                
+                {/* Affichage automatique des informations d'élimination directe */}
+                {formData.format === 'elimination_directe' && (
+                  <Grid item xs={12}>
+                    <Card sx={{ p: 2, bgcolor: 'info.main', color: 'info.contrastText' }}>
+                      <Typography variant="h6" gutterBottom>
+                        🏆 Format Élimination Directe
+                      </Typography>
+                      {(() => {
+                        const matchInfo = calculateEliminationMatches(formData.nombre_max_equipes);
+                        if (matchInfo.tours === 0) {
+                          return (
+                            <Alert severity="warning" sx={{ mt: 1 }}>
+                              {matchInfo.description}
+                            </Alert>
+                          );
+                        }
+                        return (
+                          <Box>
+                            <Typography variant="body1">
+                              <strong>{formData.nombre_max_equipes} équipes</strong> → <strong>{matchInfo.matchs} matchs</strong> → <strong>{matchInfo.tours} tours</strong>
+                            </Typography>
+                            <Typography variant="body2" sx={{ mt: 1 }}>
+                              📋 {matchInfo.description}
+                            </Typography>
+                          </Box>
+                        );
+                      })()}
+                    </Card>
+                  </Grid>
+                )}
                 <Grid item xs={12}>
                   <TextField
                     fullWidth

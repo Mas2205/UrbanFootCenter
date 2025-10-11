@@ -75,7 +75,7 @@ module.exports = (sequelize, DataTypes, defaultOptions) => {
     allowNull: false,
     defaultValue: 16,
     validate: {
-      min: 4,
+      min: 2, // Permettre 2 équipes minimum pour élimination directe (finale directe)
       max: 64
     }
   },
